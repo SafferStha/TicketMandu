@@ -1,0 +1,9 @@
+{
+  "name": "frontend-proxy",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix ../Frontend/frontend run dev",
+    "build": "npm --prefix ../Frontend/frontend run build",
+    "install": "npm --prefix ../Frontend/frontend install"
+  }
+}

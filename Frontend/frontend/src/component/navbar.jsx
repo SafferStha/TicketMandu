@@ -41,7 +41,7 @@ export default function Navbar() {
         {/* Logo */}
         <NavLink to="/" style={styles.logo}>
           <span style={styles.logoIcon}>🎫</span>
-          <span style={styles.logoText}>EventHub</span>
+          <span style={styles.logoText}>TicketMandu</span>
         </NavLink>
 
         {/* Navigation Links */}

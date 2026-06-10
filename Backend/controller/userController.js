@@ -1,23 +1,169 @@
-const {createUser, getUserByEmail} = require('../service/userService');
-
+const {
+    createUser,
+    existingUser,
+    getAllUser,
+    getUserById,
+    deleteUserById,
+    updateById,
+} = require("../model/userModel");
+const bcrypt = require("bcrypt");
+const JWT = require("jsonwebtoken");
 const addUser = async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-        return res.status(400).json({ message: 'All fields are required' });
-    }
     try {
-        console.log('Checking if user already exists with email:', email);
-        const existingUser = await getUserByEmail(email);
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-        const user = await createUser({ username, email, password });
-        res.status(201).json({ message: 'User created successfully', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Error creating user' });
+        const { name, email, password } = req.body;
+        const image = req.file ? req.file.filename : null;
+            if (!name || !email || !password) {
+        return res.status(400).json({
+        message: "Required fields are missing",
+        });
     }
+    const hashpassword = await bcrypt.hash(password, 10);
+    const user = await createUser(name, email, hashpassword, image);
+    if (user) {
+      res.status(201).json({
+        message: "Created Successfully",
+        user: user,
+      });
+    }
+  } catch (e) {
+    res.status(500).json({
+      message: "unsuccessful",
+      e: e.message,
+    });
+  }
 };
 
+const login = async (req, res) => {
+  try {
+    const { email, password: inputPassword } = req.body;
+    if (!email || !inputPassword) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+    const user = await existingUser(email);
+    if (!user) {
+      return res.status(404).json({
+        message: "email is not registered",
+      });
+    }
+    const isMatched = await bcrypt.compare(inputPassword, user.password);
+    if (!isMatched) {
+      return res.status(401).json({
+        message: "Password does not match",
+      });
+    }
+    const token = JWT.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      },
+    );
+    const { password, ...safeUser } = user;
+
+    res.status(200).json({
+      message: "Login successful",
+      user: safeUser,
+      token,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "not successful",
+      e: e.message,
+    });
+  }
+};
+
+const getAllUserFromTheDB = async (req, res) => {
+  try {
+    const user = await getAllUser();
+    if (!user || user.length == 0) {
+      return res.status(404).json({
+        message: "No users found",
+      });
+    }
+    res.status(200).json({
+      message: "successful",
+      user: user,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "unsuccessful",
+      e: e.message,
+    });
+  }
+};
+
+const getUserByIDDB = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      message: "successfully fetched",
+      user: user,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "unsuccessful",
+      e: e.message,
+    });
+  }
+};
+const deleteUserByIDDB = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await deleteUserById(id);
+
+    res.status(200).json({
+      message: "Successfully deleted",
+      user: user,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "unsuccessful",
+      e: e.message,
+    });
+  }
+};
+
+const updateUserIDBD = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+    const image = req.file ? req.file.filename : null;
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Required fields are missing",
+      });
+    }
+    const hashpassword = await bcrypt.hash(password, 10);
+    const user = await updateById(id, name, email, hashpassword, image);
+
+    res.status(200).json({
+      message: "updated successfully",
+      user: user,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "unsuccessful",
+      e: e.message,
+    });
+  }
+};
 module.exports = {
-    addUser
+  addUser,
+  deleteUserByIDDB,
+  login,
+  getAllUserFromTheDB,
+  getUserByIDDB,
+  updateUserIDBD,
 };

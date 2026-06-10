@@ -1,9 +1,10 @@
 {
-  "name": "frontend-proxy",
-  "private": true,
-  "scripts": {
-    "dev": "npm --prefix ../Frontend/frontend run dev",
-    "build": "npm --prefix ../Frontend/frontend run build",
-    "install": "npm --prefix ../Frontend/frontend install"
-  }
+    "name": "frontend-workspace",
+    "private": true,
+    "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview"
+    }
 }

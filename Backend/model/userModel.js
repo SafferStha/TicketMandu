@@ -1,12 +1,55 @@
-const pool = require('../database/db');
+const { Pool } = require("pg");
+const dotenv = require("dotenv");
+dotenv.config();
 
-const createUser = async (username, email, password) => {
-  const query = 'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *';
-    const values = [username, email, password];
-    const { rows } = await pool.query(query, values);
-    return rows[0];
+const pool = new Pool({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  port: process.env.DB_PORT,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+});
+
+module.exports = pool;
+
+const createUser = async (name, email, password, image) => {
+  const result = await pool.query(
+    "Insert into users (name, email, password, image) values ($1, $2, $3, $4)  Returning *",
+    [name, email, password, image],
+  );
+  return result.rows[0];
+};
+const existingUser = async (email) => {
+  const result = await pool.query("Select * from users where email = $1", [
+    email,
+  ]);
+  return result.rows[0];
 };
 
+const getAllUser = async () => {
+  const result = await pool.query("Select * from users");
+  return result.rows;
+};
+
+const getUserById = async (id) => {
+  const result = await pool.query("Select * from users where id = $1", [id]);
+  return result.rows[0];
+};
+const deleteUserById = async (id) => {
+  const result = await pool.query("delete from users where id = $1", [id]);
+  return result.rows[0];
+};
+const updateById = async (id, name, email, password, image) => {
+  const result = await pool.query(
+    "update users set name = $1, email =$2, password =$3, image =$4 where id = $5 Returning id",
+    [name, email, password, image, id],
+  );
+};
 module.exports = {
-    createUser
+  createUser,
+  updateById,
+  existingUser,
+  deleteUserById,
+  getAllUser,
+  getUserById,
 };

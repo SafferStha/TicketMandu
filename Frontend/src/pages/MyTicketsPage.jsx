@@ -1,11 +1,21 @@
-import { useState } from 'react';
-import TicketCard from '../component/TicketCard';
-import { tickets } from '../data/mockData';
+import { useState, useEffect } from "react";
+import TicketCard from "../component/TicketCard";
+import { ticketsAPI } from "../api";
 
 export default function MyTicketsPage() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = tickets.filter(t => t.status === activeTab);
+  useEffect(() => {
+    ticketsAPI
+      .getMyTickets()
+      .then((res) => setTickets(res.data.tickets))
+      .catch(() => setTickets([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = tickets.filter((t) => t.status === activeTab);
 
   return (
     <div style={styles.page}>
@@ -13,15 +23,17 @@ export default function MyTicketsPage() {
       <div style={styles.header}>
         <div style={styles.headerInner}>
           <h1 style={styles.title}>My Tickets</h1>
-          {/* Tabs */}
           <div style={styles.tabs}>
-            {['upcoming', 'past'].map(tab => (
+            {["upcoming", "past"].map((tab) => (
               <button
                 key={tab}
                 style={{
                   ...styles.tab,
-                  color: activeTab === tab ? '#1565c0' : '#9e9e9e',
-                  borderBottom: activeTab === tab ? '2px solid #1565c0' : '2px solid transparent',
+                  color: activeTab === tab ? "#1565c0" : "#9e9e9e",
+                  borderBottom:
+                    activeTab === tab
+                      ? "2px solid #1565c0"
+                      : "2px solid transparent",
                 }}
                 onClick={() => setActiveTab(tab)}
               >
@@ -34,9 +46,14 @@ export default function MyTicketsPage() {
 
       {/* Ticket List */}
       <div style={styles.content}>
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div style={styles.empty}>
+            <span style={styles.emptyIcon}>⏳</span>
+            <p style={styles.emptyTitle}>Loading tickets…</p>
+          </div>
+        ) : filtered.length > 0 ? (
           <div style={styles.ticketList}>
-            {filtered.map(ticket => (
+            {filtered.map((ticket) => (
               <TicketCard key={ticket.id} ticket={ticket} />
             ))}
           </div>
@@ -45,9 +62,9 @@ export default function MyTicketsPage() {
             <span style={styles.emptyIcon}>🎫</span>
             <p style={styles.emptyTitle}>No {activeTab} tickets</p>
             <p style={styles.emptySub}>
-              {activeTab === 'upcoming'
-                ? 'Book an event to see your upcoming tickets here.'
-                : 'Your past tickets will appear here.'}
+              {activeTab === "upcoming"
+                ? "Book an event to see your upcoming tickets here."
+                : "Your past tickets will appear here."}
             </p>
           </div>
         )}
@@ -57,75 +74,67 @@ export default function MyTicketsPage() {
 }
 
 const styles = {
-  page: {
-    minHeight: '100vh',
-    background: '#f4f6fb',
-  },
+  page: { minHeight: "100vh", background: "#f4f6fb" },
   header: {
-    background: '#ffffff',
-    borderBottom: '1px solid #e0e6ed',
-    padding: '24px 0 0',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    background: "#ffffff",
+    borderBottom: "1px solid #e0e6ed",
+    padding: "24px 0 0",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
   },
   headerInner: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 24px',
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "0 24px",
   },
   title: {
-    fontSize: '22px',
-    fontWeight: '700',
-    color: '#1a1a2e',
-    margin: '0 0 16px',
+    fontSize: "22px",
+    fontWeight: "700",
+    color: "#1a1a2e",
+    margin: "0 0 16px",
   },
-  tabs: {
-    display: 'flex',
-    gap: '0',
-  },
+  tabs: { display: "flex", gap: 0 },
   tab: {
-    background: 'none',
-    border: 'none',
-    borderBottom: '2px solid transparent',
-    padding: '12px 28px',
-    fontSize: '14.5px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'color 0.2s, border-color 0.2s',
-    letterSpacing: '0.2px',
+    background: "none",
+    border: "none",
+    borderBottom: "2px solid transparent",
+    padding: "12px 28px",
+    fontSize: "14.5px",
+    fontWeight: "600",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    transition: "color 0.2s, border-color 0.2s",
+    letterSpacing: "0.2px",
   },
   content: {
-    maxWidth: '900px',
-    margin: '0 auto',
-    padding: '28px 24px 48px',
+    maxWidth: "900px",
+    margin: "0 auto",
+    padding: "28px 24px 48px",
   },
   ticketList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '18px',
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
   },
   empty: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '72px 0',
-    gap: '10px',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "72px 0",
+    gap: "10px",
   },
-  emptyIcon: {
-    fontSize: '48px',
-  },
+  emptyIcon: { fontSize: "48px" },
   emptyTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#1a1a2e',
+    fontSize: "18px",
+    fontWeight: "700",
+    color: "#1a1a2e",
     margin: 0,
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
   },
   emptySub: {
-    fontSize: '14px',
-    color: '#9e9e9e',
+    fontSize: "14px",
+    color: "#9e9e9e",
     margin: 0,
-    textAlign: 'center',
-    maxWidth: '300px',
+    textAlign: "center",
+    maxWidth: "300px",
   },
 };

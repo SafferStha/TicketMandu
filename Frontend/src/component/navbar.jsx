@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
-import { user } from "../data/mockData";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -21,11 +21,6 @@ const ProfileIcon = () => (
     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
   </svg>
 );
-const BellIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-  </svg>
-);
 
 const navLinks = [
   { to: "/", label: "Home", Icon: HomeIcon },
@@ -34,7 +29,25 @@ const navLinks = [
   { to: "/profile", label: "Profile", Icon: ProfileIcon },
 ];
 
+const getInitials = (name) =>
+  name
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+
 export default function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <header style={styles.header}>
       <div style={styles.inner}>
@@ -58,17 +71,26 @@ export default function Navbar() {
             >
               <Icon />
               <span style={styles.navLabel}>{label}</span>
-              <span style={styles.navUnderline} />
             </NavLink>
           ))}
         </nav>
 
-        {/* Right side: bell + avatar */}
+        {/* Right side: avatar + sign-out */}
         <div style={styles.rightSide}>
-          <button style={styles.iconBtn} aria-label="Notifications">
-            <BellIcon />
+          <div
+            style={styles.avatar}
+            title={user?.name}
+            onClick={() => navigate("/profile")}
+          >
+            {getInitials(user?.name)}
+          </div>
+          <button
+            style={styles.signOutBtn}
+            onClick={handleSignOut}
+            title="Sign out"
+          >
+            ⎋
           </button>
-          <div style={styles.avatar}>{user.initials}</div>
         </div>
       </div>
     </header>
@@ -102,10 +124,9 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     flexShrink: 0,
+    textDecoration: "none",
   },
-  logoIcon: {
-    fontSize: "22px",
-  },
+  logoIcon: { fontSize: "22px" },
   logoText: {
     fontSize: "18px",
     fontWeight: "700",
@@ -129,35 +150,18 @@ const styles = {
     fontSize: "14px",
     fontWeight: "500",
     transition: "color 0.2s, background 0.2s",
-    position: "relative",
     textDecoration: "none",
   },
   navLinkActive: {
     color: "#ffffff",
     background: "rgba(255,255,255,0.12)",
   },
-  navLabel: {
-    whiteSpace: "nowrap",
-  },
-  navUnderline: {},
+  navLabel: { whiteSpace: "nowrap" },
   rightSide: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
+    gap: "10px",
     flexShrink: 0,
-  },
-  iconBtn: {
-    width: "38px",
-    height: "38px",
-    borderRadius: "50%",
-    background: "rgba(255,255,255,0.12)",
-    color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    border: "none",
-    transition: "background 0.2s",
   },
   avatar: {
     width: "38px",
@@ -173,5 +177,21 @@ const styles = {
     cursor: "pointer",
     border: "2px solid rgba(255,255,255,0.3)",
     flexShrink: 0,
+    userSelect: "none",
+  },
+  signOutBtn: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    background: "rgba(255,255,255,0.1)",
+    color: "rgba(255,255,255,0.75)",
+    border: "none",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+    transition: "background 0.2s",
+    title: "Sign out",
   },
 };

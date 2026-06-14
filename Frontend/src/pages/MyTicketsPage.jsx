@@ -10,7 +10,7 @@ export default function MyTicketsPage() {
   useEffect(() => {
     ticketsAPI
       .getMyTickets()
-      .then((res) => setTickets(res.data.tickets))
+      .then((res) => setTickets(res.data.data || res.data.tickets || []))
       .catch(() => setTickets([]))
       .finally(() => setLoading(false));
   }, []);

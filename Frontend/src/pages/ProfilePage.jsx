@@ -54,7 +54,7 @@ export default function ProfilePage() {
   useEffect(() => {
     ticketsAPI
       .getStats()
-      .then((res) => setStats(res.data.stats))
+      .then((res) => setStats(res.data.data?.stats || res.data.stats || {}))
       .catch(() => {}); // silently ignore – stats are cosmetic
   }, []);
 

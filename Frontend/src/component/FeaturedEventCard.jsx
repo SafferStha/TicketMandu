@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ticketsAPI } from "../api";
 import toast from "react-hot-toast";
 
 export default function FeaturedEventCard({ event }) {
+  const navigate = useNavigate();
   const [booking, setBooking] = useState(false);
 
   const handleBook = async (e) => {
@@ -25,6 +27,7 @@ export default function FeaturedEventCard({ event }) {
         background:
           event.featuredBg || "linear-gradient(135deg,#4a0080,#7b1fa2)",
       }}
+      onClick={() => navigate(`/events/${event.id}`)}
     >
       {/* Category badge */}
       <div style={styles.badge}>{event.category}</div>

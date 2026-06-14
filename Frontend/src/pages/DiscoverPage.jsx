@@ -66,7 +66,7 @@ export default function DiscoverPage() {
   useEffect(() => {
     eventsAPI
       .getAll()
-      .then((res) => setAllEvents(res.data.events))
+      .then((res) => setAllEvents(res.data.data || res.data.events || []))
       .catch(() => setAllEvents([]))
       .finally(() => setLoading(false));
   }, []);

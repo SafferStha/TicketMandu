@@ -37,7 +37,7 @@ export default function HomePage() {
   useEffect(() => {
     eventsAPI
       .getAll()
-      .then((res) => setEvents(res.data.events))
+      .then((res) => setEvents(res.data.data || res.data.events || []))
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
   }, []);

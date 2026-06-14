@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ticketsAPI } from "../api";
 import toast from "react-hot-toast";
 
@@ -37,6 +38,7 @@ const categoryColors = {
 };
 
 export default function EventCard({ event }) {
+  const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [booking, setBooking] = useState(false);
   const catStyle = categoryColors[event.category] || {
@@ -58,7 +60,7 @@ export default function EventCard({ event }) {
   };
 
   return (
-    <div style={styles.card}>
+    <div style={styles.card} onClick={() => navigate(`/events/${event.id}`)}>
       {/* Icon */}
       <div style={styles.iconBox}>
         <span style={styles.iconEmoji}>{event.icon}</span>
@@ -103,7 +105,7 @@ export default function EventCard({ event }) {
       {/* Heart */}
       <button
         style={styles.heartBtn}
-        onClick={() => setLiked((l) => !l)}
+        onClick={(e) => { e.stopPropagation(); setLiked((l) => !l); }}
         aria-label="Favourite"
       >
         <HeartIcon filled={liked} />

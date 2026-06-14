@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./component/navbar";
 import HomePage from "./pages/HomePage";
 import DiscoverPage from "./pages/DiscoverPage";
@@ -8,6 +9,7 @@ import MyTicketsPage from "./pages/MyTicketsPage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import EventDetailPage from "./pages/EventDetailPage";
 import "./App.css";
 
 function AppLayout() {
@@ -35,15 +37,15 @@ function AppLayout() {
           />
           <Route
             path="/discover"
-            element={
-              !user ? <Navigate to="/login" replace /> : <DiscoverPage />
-            }
+            element={!user ? <Navigate to="/login" replace /> : <DiscoverPage />}
+          />
+          <Route
+            path="/events/:id"
+            element={!user ? <Navigate to="/login" replace /> : <EventDetailPage />}
           />
           <Route
             path="/tickets"
-            element={
-              !user ? <Navigate to="/login" replace /> : <MyTicketsPage />
-            }
+            element={!user ? <Navigate to="/login" replace /> : <MyTicketsPage />}
           />
           <Route
             path="/profile"
@@ -64,8 +66,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
-        <AppLayout />
+        <ErrorBoundary>
+          <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
+          <AppLayout />
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );

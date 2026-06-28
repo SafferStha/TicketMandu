@@ -180,8 +180,13 @@ const bootstrapDatabase = async () => {
 };
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
-const shutdown = (signal) => {
+const shutdown = async (signal) => {
   logger.info(`[server] Received ${signal}, shutting down gracefully`);
+  try {
+    await db.end();
+  } catch {
+    /* ignore pool shutdown errors */
+  }
   process.exit(0);
 };
 process.on('SIGTERM', () => shutdown('SIGTERM'));

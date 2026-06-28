@@ -13,7 +13,15 @@ import EventDetailPage from "./pages/EventDetailPage";
 import "./App.css";
 
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, hydrating } = useAuth();
+
+  if (hydrating) {
+    return (
+      <div className="app-layout" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#9e9e9e" }}>Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app-layout">

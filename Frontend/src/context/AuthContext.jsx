@@ -1,7 +1,13 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { authAPI } from "../api";
 
 const AuthContext = createContext(null);
+
+const clearSession = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+};
 
 const initUser = () => {
   try {
@@ -9,17 +15,38 @@ const initUser = () => {
     const stored = localStorage.getItem("user");
     if (token && stored) return JSON.parse(stored);
   } catch {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+    clearSession();
   }
   return null;
 };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(initUser);
+  const [hydrating, setHydrating] = useState(() => !!localStorage.getItem("token"));
 
-  // Persist auth state from a successful auth response
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setHydrating(false);
+      return;
+    }
+
+    authAPI
+      .getProfile()
+      .then((res) => {
+        const profile = res.data.data?.user || res.data.user;
+        if (profile) {
+          setUser(profile);
+          localStorage.setItem("user", JSON.stringify(profile));
+        }
+      })
+      .catch(() => {
+        clearSession();
+        setUser(null);
+      })
+      .finally(() => setHydrating(false));
+  }, []);
+
   const _setSession = (user, accessToken, refreshToken) => {
     setUser(user);
     localStorage.setItem("token", accessToken);
@@ -29,7 +56,6 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await authAPI.login(email, password);
-    // Backend: { success, message, data: { user, accessToken, refreshToken } }
     const { user, accessToken, refreshToken } = res.data.data;
     _setSession(user, accessToken, refreshToken);
     return res.data;
@@ -37,7 +63,6 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password) => {
     const res = await authAPI.register(name, email, password);
-    // Register also returns tokens directly (201 Created)
     const { user, accessToken, refreshToken } = res.data.data;
     _setSession(user, accessToken, refreshToken);
     return res.data;
@@ -48,12 +73,10 @@ export function AuthProvider({ children }) {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) await authAPI.logout(refreshToken);
     } catch {
-      // Always clear local state even if the server call fails
+      /* always clear local state */
     } finally {
       setUser(null);
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+      clearSession();
     }
   };
 
@@ -63,7 +86,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, hydrating, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

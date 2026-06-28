@@ -31,7 +31,8 @@ const create = async ({ name, email, passwordHash, image = null, role = 'user' }
 };
 
 const updateById = async (id, fields) => {
-  const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
+  const allowed = new Set(['name', 'email', 'password', 'image', 'role']);
+  const entries = Object.entries(fields).filter(([k, v]) => allowed.has(k) && v !== undefined);
   if (entries.length === 0) return findById(id);
 
   const setClauses = entries.map(([col], i) => `${col} = $${i + 2}`).join(', ');
@@ -85,6 +86,14 @@ const findRefreshToken = async (tokenHash) => {
   return rows[0] || null;
 };
 
+const findRefreshTokenByHash = async (tokenHash) => {
+  const { rows } = await db.query(
+    'SELECT * FROM refresh_tokens WHERE token_hash = $1 LIMIT 1',
+    [tokenHash]
+  );
+  return rows[0] || null;
+};
+
 const revokeRefreshToken = async (tokenHash) => {
   await db.query(
     'UPDATE refresh_tokens SET is_revoked = true WHERE token_hash = $1',
@@ -109,6 +118,7 @@ module.exports = {
   findAll,
   storeRefreshToken,
   findRefreshToken,
+  findRefreshTokenByHash,
   revokeRefreshToken,
   revokeAllUserTokens,
 };

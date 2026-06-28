@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
-// Ensure environment variables from .env are loaded when this module is required directly
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Support either a DATABASE_URL or individual env vars.
 // If your DB requires SSL (e.g., managed providers), set DB_SSL=true in .env

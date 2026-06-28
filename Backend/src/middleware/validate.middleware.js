@@ -18,7 +18,7 @@ const validate = (schema) => (req, res, next) => {
         success: false,
         message: ERRORS.VALIDATION_ERROR.message,
         code: ERRORS.VALIDATION_ERROR.code,
-        errors: err.errors.map((e) => ({
+        errors: (err.issues || err.errors || []).map((e) => ({
           field: e.path.join('.'),
           message: e.message,
         })),
@@ -33,7 +33,7 @@ const validate = (schema) => (req, res, next) => {
  */
 const validateQuery = (schema) => (req, res, next) => {
   try {
-    req.query = schema.parse(req.query);
+    req.validatedQuery = schema.parse(req.query);
     return next();
   } catch (err) {
     if (err instanceof ZodError) {
@@ -41,7 +41,7 @@ const validateQuery = (schema) => (req, res, next) => {
         success: false,
         message: ERRORS.VALIDATION_ERROR.message,
         code: ERRORS.VALIDATION_ERROR.code,
-        errors: err.errors.map((e) => ({
+        errors: (err.issues || err.errors || []).map((e) => ({
           field: e.path.join('.'),
           message: e.message,
         })),

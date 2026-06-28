@@ -44,6 +44,11 @@ if (!hasDatabaseUrl && !hasDbUser) {
   );
 }
 
+if (!hasDatabaseUrl) {
+  required('DB_PASSWORD', process.env.DB_PASSWORD);
+  required('DB_NAME', process.env.DB_NAME);
+}
+
 required('JWT_SECRET', process.env.JWT_SECRET);
 required('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
 

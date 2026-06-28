@@ -32,7 +32,7 @@ const getById = async (req, res, next) => {
 
 const search = async (req, res, next) => {
   try {
-    const result = await eventService.searchEvents(req.query);
+    const result = await eventService.searchEvents(req.validatedQuery || req.query);
     return response.paginated(res, result.events, result.pagination);
   } catch (err) {
     return next(err);

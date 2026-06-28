@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const userRepo = require('../repositories/user.repository');
 const { hashPassword, comparePassword } = require('../utils/hash.util');
-const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../utils/jwt.util');
+const { signAccessToken } = require('../utils/jwt.util');
 const ERRORS = require('../constants/errors');
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -71,33 +71,40 @@ const login = async ({ email, password }, ipAddress) => {
 };
 
 const refresh = async (rawRefreshToken, ipAddress) => {
-  let decoded;
-  try {
-    decoded = verifyRefreshToken(rawRefreshToken);
-  } catch {
+  if (!rawRefreshToken) {
     throw createAppError(ERRORS.TOKEN_INVALID.message, 401, ERRORS.TOKEN_INVALID.code);
   }
 
   const tokenHash = hashToken(rawRefreshToken);
 
-  let stored = null;
+  let stored;
   try {
     stored = await userRepo.findRefreshToken(tokenHash);
   } catch {
-    // refresh_tokens table may not exist
+    throw createAppError(ERRORS.TOKEN_INVALID.message, 401, ERRORS.TOKEN_INVALID.code);
   }
 
-  if (stored !== null && !stored) {
-    // Token found in DB but revoked/expired — revoke whole family
-    try { await userRepo.revokeAllUserTokens(decoded.id); } catch { /* ignore */ }
-    throw createAppError('Refresh token reuse detected', 401, 'TOKEN_REUSE');
+  if (!stored) {
+    let revoked;
+    try {
+      revoked = await userRepo.findRefreshTokenByHash(tokenHash);
+    } catch {
+      revoked = null;
+    }
+
+    if (revoked?.is_revoked) {
+      try {
+        await userRepo.revokeAllUserTokens(revoked.user_id);
+      } catch { /* ignore */ }
+      throw createAppError('Refresh token reuse detected', 401, 'TOKEN_REUSE');
+    }
+
+    throw createAppError(ERRORS.TOKEN_INVALID.message, 401, ERRORS.TOKEN_INVALID.code);
   }
 
-  if (stored) {
-    await userRepo.revokeRefreshToken(tokenHash);
-  }
+  await userRepo.revokeRefreshToken(tokenHash);
 
-  const user = await userRepo.findById(decoded.id);
+  const user = await userRepo.findById(stored.user_id);
   if (!user) {
     throw createAppError(ERRORS.NOT_FOUND.message, 404, ERRORS.NOT_FOUND.code);
   }

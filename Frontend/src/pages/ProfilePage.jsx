@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { ticketsAPI } from "../api";
+import { ticketsAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
 
 const settingsItems = [
@@ -49,13 +49,20 @@ export default function ProfilePage() {
     ticketsCount: 0,
     eventsCount: 0,
     favoritesCount: 0,
+    upcomingCount: 0,
+    pastCount: 0,
   });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
 
   useEffect(() => {
     ticketsAPI
       .getStats()
-      .then((res) => setStats(res.data.data?.stats || res.data.stats || {}))
-      .catch(() => {}); // silently ignore – stats are cosmetic
+      .then((stats) => setStats((current) => ({ ...current, ...stats })))
+      .catch((err) =>
+        setStatsError(getErrorMessage(err, "Failed to load stats")),
+      )
+      .finally(() => setStatsLoading(false));
   }, []);
 
   const handleSignOut = () => {
@@ -80,20 +87,27 @@ export default function ProfilePage() {
           {/* Stats */}
           <div style={styles.statsRow}>
             <div style={styles.stat}>
-              <span style={styles.statNum}>{stats.eventsCount}</span>
+              <span style={styles.statNum}>
+                {statsLoading ? "…" : stats.eventsCount}
+              </span>
               <span style={styles.statLabel}>Events</span>
             </div>
             <div style={styles.statDivider} />
             <div style={styles.stat}>
-              <span style={styles.statNum}>{stats.ticketsCount}</span>
+              <span style={styles.statNum}>
+                {statsLoading ? "…" : stats.ticketsCount}
+              </span>
               <span style={styles.statLabel}>Tickets</span>
             </div>
             <div style={styles.statDivider} />
             <div style={styles.stat}>
-              <span style={styles.statNum}>{stats.favoritesCount}</span>
+              <span style={styles.statNum}>
+                {statsLoading ? "…" : stats.favoritesCount}
+              </span>
               <span style={styles.statLabel}>Favorites</span>
             </div>
           </div>
+          {statsError && <p style={styles.statsError}>{statsError}</p>}
         </div>
       </div>
 
@@ -159,6 +173,12 @@ const styles = {
   },
   name: { fontSize: "22px", fontWeight: "700", color: "#ffffff", margin: 0 },
   email: { fontSize: "14px", color: "rgba(255,255,255,0.65)", margin: 0 },
+  statsError: {
+    color: "#ffcdd2",
+    fontSize: "12px",
+    margin: "4px 0 0",
+    textAlign: "center",
+  },
   statsRow: {
     display: "flex",
     alignItems: "center",

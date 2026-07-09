@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ticketsAPI } from '../api';
+import { useState, useEffect, useCallback } from "react";
+import { ticketsAPI, getErrorMessage } from "../api";
 
 export function useMyTickets() {
   const [tickets, setTickets] = useState([]);
@@ -10,16 +10,18 @@ export function useMyTickets() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await ticketsAPI.getMyTickets();
-      setTickets(data.data?.tickets || data.tickets || data.data || []);
+      const { tickets } = await ticketsAPI.getMyTickets();
+      setTickets(tickets);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load tickets');
+      setError(getErrorMessage(err, "Failed to load tickets"));
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    Promise.resolve().then(fetch);
+  }, [fetch]);
 
   return { tickets, loading, error, refetch: fetch };
 }
@@ -30,9 +32,10 @@ export function useTicketStats() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    ticketsAPI.getStats()
-      .then(({ data }) => setStats(data.data?.stats || data.data || null))
-      .catch((err) => setError(err.response?.data?.message || 'Failed to load stats'))
+    ticketsAPI
+      .getStats()
+      .then(setStats)
+      .catch((err) => setError(getErrorMessage(err, "Failed to load stats")))
       .finally(() => setLoading(false));
   }, []);
 

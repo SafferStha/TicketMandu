@@ -1,18 +1,27 @@
 import { useState, useEffect } from "react";
 import TicketCard from "../component/TicketCard";
-import { ticketsAPI } from "../api";
+import { ticketsAPI, getErrorMessage } from "../api";
 
 export default function MyTicketsPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    ticketsAPI
-      .getMyTickets()
-      .then((res) => setTickets(res.data.data || res.data.tickets || []))
-      .catch(() => setTickets([]))
-      .finally(() => setLoading(false));
+    Promise.resolve().then(() => {
+      setLoading(true);
+      setError(null);
+
+      ticketsAPI
+        .getMyTickets()
+        .then(({ tickets }) => setTickets(tickets))
+        .catch((err) => {
+          setTickets([]);
+          setError(getErrorMessage(err, "Failed to load tickets"));
+        })
+        .finally(() => setLoading(false));
+    });
   }, []);
 
   const filtered = tickets.filter((t) => t.status === activeTab);
@@ -50,6 +59,11 @@ export default function MyTicketsPage() {
           <div style={styles.empty}>
             <span style={styles.emptyIcon}>⏳</span>
             <p style={styles.emptyTitle}>Loading tickets…</p>
+          </div>
+        ) : error ? (
+          <div style={styles.empty}>
+            <span style={styles.emptyIcon}>⚠️</span>
+            <p style={styles.errorText}>{error}</p>
           </div>
         ) : filtered.length > 0 ? (
           <div style={styles.ticketList}>
@@ -136,5 +150,12 @@ const styles = {
     margin: 0,
     textAlign: "center",
     maxWidth: "300px",
+  },
+  errorText: {
+    fontSize: "14px",
+    color: "#e53935",
+    margin: 0,
+    textAlign: "center",
+    maxWidth: "360px",
   },
 };

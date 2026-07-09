@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import EventCard from "../component/EventCard";
 import CategoryChips from "../component/CategoryChips";
-import { eventsAPI } from "../api";
+import { eventsAPI, getErrorMessage } from "../api";
 
 const SearchIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="#9e9e9e">
@@ -58,30 +58,28 @@ export default function DiscoverPage() {
   const [query, setQuery] = useState(initialQ);
   const [submitted, setSubmitted] = useState(!!initialQ);
   const [selectedCat, setSelectedCat] = useState("all");
-  const [allEvents, setAllEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [recentSearches, setRecentSearches] = useState(getRecentSearches);
 
-  // Load all events once
   useEffect(() => {
-    eventsAPI
-      .getAll()
-      .then((res) => setAllEvents(res.data.data || res.data.events || []))
-      .catch(() => setAllEvents([]))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!submitted) return;
 
-  const results = allEvents.filter((e) => {
-    const matchQ =
-      !submitted || !query
-        ? true
-        : e.name.toLowerCase().includes(query.toLowerCase()) ||
-          e.category.toLowerCase().includes(query.toLowerCase()) ||
-          e.venue.toLowerCase().includes(query.toLowerCase());
-    const matchCat =
-      selectedCat === "all" || e.category.toLowerCase() === selectedCat;
-    return matchQ && matchCat;
-  });
+    Promise.resolve().then(() => {
+      setLoading(true);
+      setError(null);
+
+      eventsAPI
+        .search({ q: query.trim(), category: selectedCat, limit: 50 })
+        .then(({ events }) => setResults(events))
+        .catch((err) => {
+          setResults([]);
+          setError(getErrorMessage(err, "Search failed"));
+        })
+        .finally(() => setLoading(false));
+    });
+  }, [submitted, query, selectedCat]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -197,7 +195,17 @@ export default function DiscoverPage() {
                   : `${results.length} result${results.length !== 1 ? "s" : ""}${query ? ` for "${query}"` : ""}`}
               </p>
               <div style={styles.eventList}>
-                {loading ? null : results.length > 0 ? (
+                {loading ? (
+                  <div style={styles.noResults}>
+                    <span style={styles.noResultsIcon}>⏳</span>
+                    <p style={styles.noResultsText}>Loading events…</p>
+                  </div>
+                ) : error ? (
+                  <div style={styles.noResults}>
+                    <span style={styles.noResultsIcon}>⚠️</span>
+                    <p style={styles.errorText}>{error}</p>
+                  </div>
+                ) : results.length > 0 ? (
                   results.map((e) => <EventCard key={e.id} event={e} />)
                 ) : (
                   <div style={styles.noResults}>
@@ -343,4 +351,10 @@ const styles = {
     margin: 0,
   },
   noResultsSub: { fontSize: "13.5px", color: "#9e9e9e", margin: 0 },
+  errorText: {
+    fontSize: "14px",
+    color: "#e53935",
+    margin: 0,
+    textAlign: "center",
+  },
 };

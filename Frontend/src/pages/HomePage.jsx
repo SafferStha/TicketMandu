@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import FeaturedEventCard from "../component/FeaturedEventCard";
 import EventCard from "../component/EventCard";
 import CategoryChips from "../component/CategoryChips";
-import { eventsAPI } from "../api";
+import { eventsAPI, getErrorMessage } from "../api";
 import { useAuth } from "../context/AuthContext";
 
 const SearchIcon = () => (
@@ -29,21 +29,31 @@ function getGreeting() {
 export default function HomePage() {
   const [selectedCat, setSelectedCat] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [events, setEvents] = useState([]);
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [trendingEvents, setTrendingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
-    eventsAPI
-      .getAll()
-      .then((res) => setEvents(res.data.data || res.data.events || []))
-      .catch(() => setEvents([]))
-      .finally(() => setLoading(false));
-  }, []);
+    Promise.resolve().then(() => {
+      setLoading(true);
+      setError(null);
 
-  const featuredEvents = events.filter((e) => e.featured);
-  const trendingEvents = events.filter((e) => !e.featured);
+      Promise.all([eventsAPI.getFeatured(), eventsAPI.getAll({ limit: 50 })])
+        .then(([featured, { events }]) => {
+          setFeaturedEvents(featured);
+          setTrendingEvents(events.filter((event) => !event.featured));
+        })
+        .catch((err) => {
+          setFeaturedEvents([]);
+          setTrendingEvents([]);
+          setError(getErrorMessage(err, "Failed to load events"));
+        })
+        .finally(() => setLoading(false));
+    });
+  }, []);
 
   const filteredTrending =
     selectedCat === "all"
@@ -95,6 +105,8 @@ export default function HomePage() {
           <div style={styles.featuredScroll}>
             {loading ? (
               <p style={styles.empty}>Loading events…</p>
+            ) : error ? (
+              <p style={styles.error}>{error}</p>
             ) : featuredEvents.length > 0 ? (
               featuredEvents.map((event) => (
                 <FeaturedEventCard key={event.id} event={event} />
@@ -128,6 +140,8 @@ export default function HomePage() {
           <div style={styles.eventList}>
             {loading ? (
               <p style={styles.empty}>Loading events…</p>
+            ) : error ? (
+              <p style={styles.error}>{error}</p>
             ) : filteredTrending.length > 0 ? (
               filteredTrending.map((event) => (
                 <EventCard key={event.id} event={event} />
@@ -237,4 +251,5 @@ const styles = {
     marginTop: "16px",
   },
   empty: { color: "#9e9e9e", textAlign: "center", padding: "24px" },
+  error: { color: "#e53935", textAlign: "center", padding: "24px" },
 };

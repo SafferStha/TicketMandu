@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ticketsAPI } from "../api";
+import { ticketsAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
 
 const HeartIcon = ({ filled }) => (
@@ -53,7 +53,7 @@ export default function EventCard({ event }) {
       await ticketsAPI.bookTicket(event.id);
       toast.success("🎫 Ticket booked! Check My Tickets.");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to book ticket");
+      toast.error(getErrorMessage(err, "Failed to book ticket"));
     } finally {
       setBooking(false);
     }
@@ -105,7 +105,10 @@ export default function EventCard({ event }) {
       {/* Heart */}
       <button
         style={styles.heartBtn}
-        onClick={(e) => { e.stopPropagation(); setLiked((l) => !l); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setLiked((l) => !l);
+        }}
         aria-label="Favourite"
       >
         <HeartIcon filled={liked} />

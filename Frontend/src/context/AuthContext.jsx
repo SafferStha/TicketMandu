@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI } from "../api";
+import { authAPI, getErrorMessage } from "../api";
 
 const AuthContext = createContext(null);
 
@@ -22,19 +22,17 @@ const initUser = () => {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(initUser);
-  const [hydrating, setHydrating] = useState(() => !!localStorage.getItem("token"));
+  const [hydrating, setHydrating] = useState(
+    () => !!localStorage.getItem("token"),
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      setHydrating(false);
-      return;
-    }
+    if (!token) return;
 
     authAPI
       .getProfile()
-      .then((res) => {
-        const profile = res.data.data?.user || res.data.user;
+      .then((profile) => {
         if (profile) {
           setUser(profile);
           localStorage.setItem("user", JSON.stringify(profile));
@@ -48,24 +46,39 @@ export function AuthProvider({ children }) {
   }, []);
 
   const _setSession = (user, accessToken, refreshToken) => {
+    if (!user || !accessToken || !refreshToken) {
+      throw new Error("Authentication response was incomplete");
+    }
+
     setUser(user);
     localStorage.setItem("token", accessToken);
-    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("user", JSON.stringify(user));
   };
 
   const login = async (email, password) => {
-    const res = await authAPI.login(email, password);
-    const { user, accessToken, refreshToken } = res.data.data;
-    _setSession(user, accessToken, refreshToken);
-    return res.data;
+    try {
+      const session = await authAPI.login(email, password);
+      _setSession(session.user, session.accessToken, session.refreshToken);
+      return session;
+    } catch (err) {
+      throw new Error(getErrorMessage(err, "Login failed. Please try again."), {
+        cause: err,
+      });
+    }
   };
 
   const register = async (name, email, password) => {
-    const res = await authAPI.register(name, email, password);
-    const { user, accessToken, refreshToken } = res.data.data;
-    _setSession(user, accessToken, refreshToken);
-    return res.data;
+    try {
+      const session = await authAPI.register(name, email, password);
+      _setSession(session.user, session.accessToken, session.refreshToken);
+      return session;
+    } catch (err) {
+      throw new Error(
+        getErrorMessage(err, "Registration failed. Please try again."),
+        { cause: err },
+      );
+    }
   };
 
   const logout = async () => {
@@ -86,7 +99,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, hydrating, login, register, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, hydrating, login, register, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ticketsAPI } from "../api";
+import { ticketsAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
 
 export default function FeaturedEventCard({ event }) {
@@ -14,7 +14,7 @@ export default function FeaturedEventCard({ event }) {
       await ticketsAPI.bookTicket(event.id);
       toast.success("🎫 Ticket booked! Check My Tickets.");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to book ticket");
+      toast.error(getErrorMessage(err, "Failed to book ticket"));
     } finally {
       setBooking(false);
     }

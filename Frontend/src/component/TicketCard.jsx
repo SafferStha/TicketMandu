@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ticketsAPI } from "../api";
+import { ticketsAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
 
 const CalIcon = () => (
@@ -41,7 +41,7 @@ export default function TicketCard({ ticket }) {
       await ticketsAPI.bookTicket(event.id);
       toast.success("🎫 Ticket booked! Check upcoming tickets.");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to book ticket");
+      toast.error(getErrorMessage(err, "Failed to book ticket"));
     } finally {
       setBooking(false);
     }

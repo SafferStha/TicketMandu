@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { eventsAPI } from '../api';
+import { useState, useEffect, useCallback } from "react";
+import { eventsAPI, getErrorMessage } from "../api";
 
 export function useEvents(params) {
   const [events, setEvents] = useState([]);
@@ -10,18 +10,18 @@ export function useEvents(params) {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await eventsAPI.getAll(params);
-      setEvents(data.data?.events || data.events || data.data || []);
+      const { events } = await eventsAPI.getAll(params);
+      setEvents(events);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load events');
+      setError(getErrorMessage(err, "Failed to load events"));
     } finally {
       setLoading(false);
     }
-  // params changes intentionally not in dep array — caller controls when to re-fetch
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [params]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    Promise.resolve().then(fetch);
+  }, [fetch]);
 
   return { events, loading, error, refetch: fetch };
 }
@@ -32,9 +32,12 @@ export function useFeaturedEvents() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    eventsAPI.getFeatured()
-      .then(({ data }) => setEvents(data.data?.events || data.events || data.data || []))
-      .catch((err) => setError(err.response?.data?.message || 'Failed to load featured events'))
+    eventsAPI
+      .getFeatured()
+      .then(setEvents)
+      .catch((err) =>
+        setError(getErrorMessage(err, "Failed to load featured events")),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -47,16 +50,19 @@ export function useEventSearch(query, category) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!query && !category) {
-      setResults([]);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    eventsAPI.search(query, category)
-      .then(({ data }) => setResults(data.data?.events || data.events || data.data || []))
-      .catch((err) => setError(err.response?.data?.message || 'Search failed'))
-      .finally(() => setLoading(false));
+    Promise.resolve().then(() => {
+      if (!query && !category) {
+        setResults([]);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      eventsAPI
+        .search({ q: query, category })
+        .then(({ events }) => setResults(events))
+        .catch((err) => setError(getErrorMessage(err, "Search failed")))
+        .finally(() => setLoading(false));
+    });
   }, [query, category]);
 
   return { results, loading, error };

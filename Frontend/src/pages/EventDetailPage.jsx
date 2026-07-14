@@ -1,113 +1,198 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { eventsAPI, ticketsAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
+import {
+  eventsAPI,
+  ordersAPI,
+  favoritesAPI,
+  reviewsAPI,
+  getErrorMessage,
+} from "../api";
+import { useAuth } from "../context/AuthContext";
+import { formatPrice } from "../utils/format.util";
 
-const BackIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-  </svg>
-);
-const CalIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    style={{ opacity: 0.7 }}
-  >
-    <path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z" />
-  </svg>
-);
-const PinIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    style={{ opacity: 0.7 }}
-  >
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-  </svg>
-);
-const ClockIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    style={{ opacity: 0.7 }}
-  >
-    <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
-  </svg>
-);
+const BackIcon = () => <span aria-hidden="true">←</span>;
 const HeartIcon = ({ filled }) => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill={filled ? "#ef4444" : "none"}
-    stroke={filled ? "#ef4444" : "#9e9e9e"}
-    strokeWidth="2"
-  >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
+  <span aria-hidden="true">{filled ? "♥" : "♡"}</span>
 );
 
-const categoryColors = {
-  Music: { bg: "#ede9fe", text: "#7c3aed" },
-  Sports: { bg: "#fff7ed", text: "#ea580c" },
-  Arts: { bg: "#fdf4ff", text: "#a21caf" },
-  Comedy: { bg: "#fefce8", text: "#ca8a04" },
-  Family: { bg: "#f0fdf4", text: "#16a34a" },
-  Theater: { bg: "#fff1f2", text: "#e11d48" },
-};
+const unavailableStatuses = new Set([
+  "draft",
+  "cancelled",
+  "completed",
+  "deleted",
+  "expired",
+]);
 
-const TICKET_OPTIONS = [
-  { id: "ga", label: "General Admission", multiplier: 1.0 },
-  { id: "premium", label: "Premium", multiplier: 1.5 },
-  { id: "vip", label: "VIP", multiplier: 2.5 },
-  { id: "early", label: "Early Bird", multiplier: 0.8 },
-];
+const remainingFor = (ticketType) =>
+  Math.max(
+    0,
+    Number(ticketType?.quantity || 0) - Number(ticketType?.quantity_sold || 0),
+  );
+const ticketCurrency = (ticketType, event) =>
+  ticketType?.currency || event?.currency || "NPR";
 
 export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [event, setEvent] = useState(null);
+  const [ticketTypes, setTicketTypes] = useState([]);
+  const [reviews, setReviews] = useState({
+    reviews: [],
+    summary: { average_rating: 0, review_count: 0 },
+  });
+  const [myOrders, setMyOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [booking, setBooking] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState("ga");
+  const [selectedTicketTypeId, setSelectedTicketTypeId] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewBody, setReviewBody] = useState("");
+  const [reviewing, setReviewing] = useState(false);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      setLoading(true);
-      setError(null);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
-      eventsAPI
-        .getById(id)
-        .then(setEvent)
-        .catch((err) => {
-          const message = getErrorMessage(err, "Event not found");
-          setError(message);
-          toast.error(message);
-        })
-        .finally(() => setLoading(false));
-    });
-  }, [id]);
+    const requests = [
+      eventsAPI.getById(id),
+      eventsAPI.getTicketTypes(id),
+      reviewsAPI.getByEvent(id),
+    ];
+    if (user)
+      requests.push(
+        ordersAPI
+          .getMy({ eventId: id, limit: 50 })
+          .catch(() => ({ orders: [] })),
+      );
+
+    Promise.all(requests)
+      .then(([eventData, types, reviewData, ordersData]) => {
+        if (cancelled) return;
+        const activeTypes = (types || []).sort(
+          (a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0),
+        );
+        setEvent(eventData);
+        setTicketTypes(activeTypes);
+        setReviews(
+          reviewData || {
+            reviews: [],
+            summary: { average_rating: 0, review_count: 0 },
+          },
+        );
+        setMyOrders(ordersData?.orders || []);
+        const firstAvailable =
+          activeTypes.find(
+            (type) => type.is_active !== false && remainingFor(type) > 0,
+          ) || activeTypes[0];
+        setSelectedTicketTypeId(firstAvailable?.id || null);
+        setQuantity(1);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        const message = getErrorMessage(err, "Event not found");
+        setError(message);
+        toast.error(message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user]);
+
+  const selectedTicketType = useMemo(
+    () =>
+      ticketTypes.find(
+        (ticketType) => ticketType.id === selectedTicketTypeId,
+      ) || null,
+    [ticketTypes, selectedTicketTypeId],
+  );
+
+  const remaining = remainingFor(selectedTicketType);
+  const maxPerOrder = Math.max(
+    1,
+    Math.min(Number(selectedTicketType?.max_per_order || 1), remaining || 1),
+  );
+  const unitPrice = Number(selectedTicketType?.price || 0);
+  const subtotal = selectedTicketType ? unitPrice * quantity : 0;
+  const serviceFee = 0;
+  const discount = 0;
+  const total = Math.max(0, subtotal + serviceFee - discount);
+  const currency = ticketCurrency(selectedTicketType, event);
+  const isEventUnavailable = unavailableStatuses.has(
+    String(event?.status || "published").toLowerCase(),
+  );
+  const isTicketUnavailable =
+    !selectedTicketType ||
+    selectedTicketType.is_active === false ||
+    remaining <= 0;
+  const invalidQuantity =
+    !Number.isInteger(quantity) || quantity < 1 || quantity > maxPerOrder;
+  const bookingDisabled =
+    booking || isEventUnavailable || isTicketUnavailable || invalidQuantity;
+
+  const canReview = useMemo(() => {
+    if (!user) return false;
+    const alreadyReviewed = (reviews.reviews || []).some(
+      (review) => Number(review.user_id) === Number(user.id),
+    );
+    const hasConfirmedOrder = myOrders.some(
+      (order) =>
+        ["confirmed", "paid"].includes(order.status) &&
+        (order.items || []).some(
+          (item) => Number(item.eventId || item.event_id) === Number(id),
+        ),
+    );
+    return hasConfirmedOrder && !alreadyReviewed;
+  }, [id, myOrders, reviews.reviews, user]);
+
+  const selectTicketType = (ticketType) => {
+    if (ticketType.is_active === false || remainingFor(ticketType) <= 0) return;
+    setSelectedTicketTypeId(ticketType.id);
+    const nextMax = Math.max(
+      1,
+      Math.min(
+        Number(ticketType.max_per_order || 1),
+        remainingFor(ticketType) || 1,
+      ),
+    );
+    setQuantity((value) => Math.min(Math.max(value, 1), nextMax));
+  };
 
   const handleBook = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (bookingDisabled) {
+      toast.error(
+        isEventUnavailable
+          ? "This event is not available for booking"
+          : "Select an available ticket type and quantity",
+      );
+      return;
+    }
+
     setBooking(true);
     try {
-      const ticketOption = TICKET_OPTIONS.find((t) => t.id === selectedTicket);
-      const seatLabel = `${ticketOption.label} · Qty ${quantity}`;
-      await ticketsAPI.bookTicket(event.id, seatLabel);
-      toast.success(
-        `🎫 ${quantity} ticket${quantity > 1 ? "s" : ""} booked! Check My Tickets.`,
-      );
+      const order = await ordersAPI.create({
+        items: [
+          { eventId: event.id, ticketTypeId: selectedTicketType.id, quantity },
+        ],
+        serviceFee,
+        discountAmount: discount,
+        currency,
+      });
+      toast.success("Order created. Continue to checkout.");
+      navigate(`/checkout?orderId=${order.id}`, { state: { order } });
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to book ticket"));
     } finally {
@@ -115,34 +200,65 @@ export default function EventDetailPage() {
     }
   };
 
+  const toggleFavorite = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      if (liked) await favoritesAPI.remove(event.id);
+      else await favoritesAPI.add(event.id);
+      setLiked((current) => !current);
+      toast.success(liked ? "Removed from favorites" : "Saved to favorites");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update favorite"));
+    }
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!canReview) return;
+    setReviewing(true);
+    try {
+      await reviewsAPI.create({
+        eventId: event.id,
+        rating: reviewRating,
+        body: reviewBody,
+      });
+      const reviewData = await reviewsAPI.getByEvent(id);
+      setReviews(reviewData || reviews);
+      setReviewBody("");
+      toast.success("Review submitted");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to submit review"));
+    } finally {
+      setReviewing(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div style={styles.page}>
-        <div style={styles.skeleton}>
-          <div
-            style={{
-              ...styles.skeletonBlock,
-              height: "280px",
-              borderRadius: 0,
-            }}
-          />
-          <div style={styles.skeletonContent}>
-            {[200, 140, 100, 160].map((w, i) => (
-              <div key={i} style={{ ...styles.skeletonLine, width: w }} />
-            ))}
-          </div>
+      <div className="tm-page">
+        <div className="tm-container tm-empty tm-card">
+          <span className="tm-empty-icon">⏳</span>
+          <h3>Loading event…</h3>
+          <p>Fetching event details, tickets, and reviews.</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !event) {
     return (
-      <div style={styles.page}>
-        <div style={styles.errorState}>
-          <span style={styles.errorIcon}>⚠️</span>
-          <p style={styles.errorText}>{error}</p>
-          <button style={styles.retryBtn} onClick={() => navigate("/discover")}>
+      <div className="tm-page">
+        <div className="tm-container tm-empty tm-card">
+          <span className="tm-empty-icon">⚠️</span>
+          <h3>Event unavailable</h3>
+          <p>{error || "We could not find this event."}</p>
+          <button
+            className="tm-btn-secondary"
+            onClick={() => navigate("/discover")}
+          >
             Back to Discover
           </button>
         </div>
@@ -150,424 +266,312 @@ export default function EventDetailPage() {
     );
   }
 
-  if (!event) return null;
-
-  const catStyle = categoryColors[event.category] || {
-    bg: "#f5f5f5",
-    text: "#616161",
+  const heroStyle = {
+    background: event.featuredBg || "linear-gradient(135deg, #0d1b4b, #1565c0)",
   };
-  const ticketOption = TICKET_OPTIONS.find((t) => t.id === selectedTicket);
-  const pricePerTicket = (event.price * ticketOption.multiplier).toFixed(2);
-  const totalPrice = (pricePerTicket * quantity).toFixed(2);
+  const rating = Number(reviews.summary?.average_rating || 0).toFixed(1);
+  const reviewCount = Number(reviews.summary?.review_count || 0);
+
+  const BookingSummary = ({ mobile = false }) => (
+    <>
+      <div className="booking-total">
+        <div className="summary-row">
+          <span>Subtotal</span>
+          <strong>
+            {selectedTicketType ? formatPrice(subtotal, currency) : "—"}
+          </strong>
+        </div>
+        <div className="summary-row">
+          <span>Service fee</span>
+          <strong>{formatPrice(serviceFee, currency)}</strong>
+        </div>
+        <div className="summary-row">
+          <span>Discount</span>
+          <strong>-{formatPrice(discount, currency)}</strong>
+        </div>
+        <div className="summary-row total">
+          <span>Total</span>
+          <strong>
+            {selectedTicketType ? formatPrice(total, currency) : "—"}
+          </strong>
+        </div>
+      </div>
+      {!mobile && (
+        <button
+          className="tm-btn desktop-book-btn"
+          disabled={bookingDisabled}
+          onClick={handleBook}
+        >
+          {booking ? "Creating order…" : user ? "Book Now" : "Login to Book"}
+        </button>
+      )}
+      {isEventUnavailable ? (
+        <p className="tm-error">
+          This event is currently {event.status} and cannot be booked.
+        </p>
+      ) : null}
+      {!selectedTicketType && ticketTypes.length === 0 ? (
+        <p className="tm-muted">
+          Tickets are not available for this event yet.
+        </p>
+      ) : null}
+    </>
+  );
 
   return (
-    <div style={styles.page}>
-      {/* Hero Banner */}
-      <div
-        style={{
-          ...styles.hero,
-          background:
-            event.featuredBg || "linear-gradient(135deg, #0d1b4b, #1565c0)",
-        }}
-      >
-        <div style={styles.heroControls}>
-          <button style={styles.backBtn} onClick={() => navigate(-1)}>
-            <BackIcon />
-          </button>
-          <button style={styles.heartBtn} onClick={() => setLiked((l) => !l)}>
-            <HeartIcon filled={liked} />
-          </button>
-        </div>
-        <div style={styles.heroContent}>
-          <span style={styles.heroBadge}>{event.category}</span>
-          <div style={styles.heroIcon}>{event.icon}</div>
-          <h1 style={styles.heroTitle}>{event.name}</h1>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div style={styles.content}>
-        {/* Quick Info Row */}
-        <div style={styles.infoCard}>
-          <div style={styles.infoItem}>
-            <CalIcon />
-            <div>
-              <p style={styles.infoLabel}>Date</p>
-              <p style={styles.infoValue}>{event.date}</p>
-            </div>
+    <div className="tm-page" style={{ paddingTop: 0 }}>
+      <section className="event-hero" style={heroStyle}>
+        {event.coverImageUrl ? (
+          <img className="event-hero-media" src={event.coverImageUrl} alt="" />
+        ) : null}
+        <div className="tm-container event-hero-inner">
+          <div className="event-hero-actions">
+            <button
+              className="tm-icon-btn"
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+            >
+              <BackIcon />
+            </button>
+            <button
+              className="tm-icon-btn"
+              onClick={toggleFavorite}
+              aria-label="Toggle favorite"
+            >
+              <HeartIcon filled={liked} />
+            </button>
           </div>
-          <div style={styles.infoDivider} />
-          <div style={styles.infoItem}>
-            <ClockIcon />
-            <div>
-              <p style={styles.infoLabel}>Time</p>
-              <p style={styles.infoValue}>{event.time}</p>
-            </div>
-          </div>
-          <div style={styles.infoDivider} />
-          <div style={styles.infoItem}>
-            <PinIcon />
-            <div>
-              <p style={styles.infoLabel}>Venue</p>
-              <p style={{ ...styles.infoValue, fontSize: "12.5px" }}>
-                {event.venue}
-              </p>
+          <div className="event-hero-copy">
+            <span className="tm-badge">{event.category || "Event"}</span>
+            <h1 className="event-title">{event.name}</h1>
+            <div className="event-subline">
+              <span>📅 {event.date || "Date TBA"}</span>
+              <span>🕒 {event.time || "Time TBA"}</span>
+              <span>📍 {event.venue || "Venue TBA"}</span>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* About */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>About this Event</h2>
-          <p style={styles.description}>
-            {event.description ||
-              `Join us for an unforgettable experience at ${event.name}. This ${event.category.toLowerCase()} event promises to be one of the highlights of the year. Featuring world-class entertainment, excellent venues, and memories that will last a lifetime. Don't miss out — tickets are selling fast!`}
-          </p>
-        </section>
+      <div className="tm-container event-shell">
+        <main className="event-main">
+          <section className="tm-card event-panel">
+            <div className="event-info-grid">
+              <div className="event-info-item">
+                <span>Date</span>
+                <strong>{event.date || "TBA"}</strong>
+              </div>
+              <div className="event-info-item">
+                <span>Time</span>
+                <strong>{event.time || "TBA"}</strong>
+              </div>
+              <div className="event-info-item">
+                <span>Rating</span>
+                <strong>
+                  ★ {rating} ({reviewCount})
+                </strong>
+              </div>
+            </div>
+          </section>
 
-        {/* Ticket Selection */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Select Tickets</h2>
-          <div style={styles.ticketOptions}>
-            {TICKET_OPTIONS.map((opt) => {
-              const price = (event.price * opt.multiplier).toFixed(2);
-              const isSelected = selectedTicket === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  style={{
-                    ...styles.ticketOpt,
-                    ...(isSelected ? styles.ticketOptActive : {}),
-                  }}
-                  onClick={() => setSelectedTicket(opt.id)}
-                >
-                  <div style={styles.ticketOptTop}>
-                    <span style={styles.ticketOptName}>{opt.label}</span>
-                    {isSelected && <span style={styles.checkMark}>✓</span>}
-                  </div>
-                  <span
-                    style={{
-                      ...styles.ticketOptPrice,
-                      color: isSelected ? "#1565c0" : "#1a1a2e",
-                    }}
-                  >
-                    ${price}
+          <section className="tm-card event-panel">
+            <h2>About this event</h2>
+            <p className="tm-muted">
+              {event.description ||
+                `Join us for an unforgettable TicketMandu experience at ${event.name}.`}
+            </p>
+          </section>
+
+          <section className="tm-card event-panel">
+            <h2>Event details</h2>
+            <div className="event-details-grid">
+              <div>
+                <span className="tm-muted">Venue</span>
+                <h3>{event.venue || "Venue TBA"}</h3>
+              </div>
+              <div>
+                <span className="tm-muted">Organizer</span>
+                <h3>{event.organizerName || "TicketMandu Organizer"}</h3>
+              </div>
+              <div>
+                <span className="tm-muted">Category</span>
+                <h3>{event.category || "General"}</h3>
+              </div>
+              <div>
+                <span className="tm-muted">Status</span>
+                <h3>
+                  <span className={`tm-badge ${event.status}`}>
+                    {event.status || "published"}
                   </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Quantity */}
-          <div style={styles.quantityRow}>
-            <span style={styles.quantityLabel}>Quantity</span>
-            <div style={styles.quantityControls}>
-              <button
-                style={styles.qtyBtn}
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              >
-                −
-              </button>
-              <span style={styles.qtyValue}>{quantity}</span>
-              <button
-                style={styles.qtyBtn}
-                onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-              >
-                +
-              </button>
+                </h3>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Category Tag */}
-        <span
-          style={{
-            ...styles.categoryTag,
-            background: catStyle.bg,
-            color: catStyle.text,
-          }}
-        >
-          {event.category}
-        </span>
+          <section className="tm-card event-panel">
+            <h2>Reviews</h2>
+            <p className="tm-muted">
+              Average rating: <strong>{rating}</strong> from {reviewCount}{" "}
+              review{reviewCount === 1 ? "" : "s"}.
+            </p>
+            {canReview ? (
+              <form className="review-form" onSubmit={submitReview}>
+                <select
+                  className="form-control"
+                  value={reviewRating}
+                  onChange={(e) => setReviewRating(Number(e.target.value))}
+                >
+                  {[5, 4, 3, 2, 1].map((r) => (
+                    <option key={r} value={r}>
+                      {r} Star{r > 1 ? "s" : ""}
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  className="form-control"
+                  value={reviewBody}
+                  onChange={(e) => setReviewBody(e.target.value)}
+                  placeholder="Share your experience"
+                  rows={4}
+                />
+                <button
+                  className="tm-btn"
+                  disabled={reviewing || !reviewBody.trim()}
+                >
+                  {reviewing ? "Submitting…" : "Submit review"}
+                </button>
+              </form>
+            ) : (
+              <p className="tm-muted">
+                Only customers with a confirmed ticket for this event can submit
+                a review.
+              </p>
+            )}
+            <div className="review-list" style={{ marginTop: 14 }}>
+              {(reviews.reviews || []).length === 0 ? (
+                <div className="tm-empty" style={{ padding: 18 }}>
+                  <p>No reviews yet.</p>
+                </div>
+              ) : (
+                (reviews.reviews || []).map((review) => (
+                  <article className="review-card" key={review.id}>
+                    <strong>{review.user_name || "Guest"}</strong>
+                    <div aria-label={`${review.rating} stars`}>
+                      {"★".repeat(Number(review.rating || 0))}
+                    </div>
+                    <p>{review.body || "No comment provided."}</p>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        </main>
+
+        <aside className="tm-card booking-card">
+          <div>
+            <h2>Select tickets</h2>
+            <p className="tm-muted">
+              Choose a ticket type and quantity to continue.
+            </p>
+          </div>
+          <div className="ticket-type-list">
+            {ticketTypes.length === 0 ? (
+              <div className="tm-empty" style={{ padding: 20 }}>
+                <span className="tm-empty-icon">🎟️</span>
+                <h3>No tickets yet</h3>
+                <p>Tickets are not available for this event yet.</p>
+              </div>
+            ) : (
+              ticketTypes.map((ticketType) => {
+                const available = remainingFor(ticketType);
+                const disabled =
+                  ticketType.is_active === false || available <= 0;
+                const selected = selectedTicketType?.id === ticketType.id;
+                return (
+                  <button
+                    type="button"
+                    key={ticketType.id}
+                    className={`ticket-type-card${selected ? " is-selected" : ""}`}
+                    disabled={disabled}
+                    onClick={() => selectTicketType(ticketType)}
+                  >
+                    <div className="ticket-type-top">
+                      <div>
+                        <strong>{ticketType.name}</strong>
+                        <p className="ticket-desc">
+                          {ticketType.description || "General admission ticket"}
+                        </p>
+                      </div>
+                      <div className="ticket-price">
+                        {formatPrice(ticketType.price, ticketType.currency)}
+                      </div>
+                    </div>
+                    <div className="ticket-meta">
+                      <span>
+                        {available > 0 ? `${available} remaining` : "Sold out"}
+                      </span>
+                      <span>Max {ticketType.max_per_order || 1}/order</span>
+                      <span>
+                        {ticketType.is_active === false
+                          ? "Inactive"
+                          : "Available"}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {selectedTicketType ? (
+            <div className="qty-row">
+              <strong>Quantity</strong>
+              <div className="qty-controls">
+                <button
+                  className="qty-btn"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                >
+                  −
+                </button>
+                <strong>{quantity}</strong>
+                <button
+                  className="qty-btn"
+                  disabled={quantity >= maxPerOrder}
+                  onClick={() =>
+                    setQuantity((q) => Math.min(maxPerOrder, q + 1))
+                  }
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          <BookingSummary />
+        </aside>
       </div>
 
-      {/* Sticky Checkout Bar */}
-      <div style={styles.checkoutBar}>
-        <div style={styles.checkoutLeft}>
-          <span style={styles.checkoutTotal}>${totalPrice}</span>
-          <span style={styles.checkoutMeta}>
-            {quantity} × ${pricePerTicket} · {ticketOption.label}
-          </span>
+      <div className="mobile-booking-bar">
+        <div>
+          <strong>
+            {selectedTicketType
+              ? formatPrice(total, currency)
+              : "Select tickets"}
+          </strong>
+          <p className="tm-muted" style={{ margin: 0, fontSize: 12 }}>
+            {selectedTicketType
+              ? `${quantity} × ${selectedTicketType.name}`
+              : "No ticket selected"}
+          </p>
         </div>
         <button
-          style={{ ...styles.checkoutBtn, opacity: booking ? 0.7 : 1 }}
+          className="tm-btn"
+          disabled={bookingDisabled}
           onClick={handleBook}
-          disabled={booking}
         >
-          {booking ? "Booking…" : `Book Now`}
+          {booking ? "…" : "Book"}
         </button>
       </div>
     </div>
   );
 }
-
-const styles = {
-  page: { minHeight: "100vh", background: "#f4f6fb", paddingBottom: "90px" },
-  hero: {
-    minHeight: "280px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    padding: "16px",
-    position: "relative",
-  },
-  heroControls: { display: "flex", justifyContent: "space-between" },
-  backBtn: {
-    width: "40px",
-    height: "40px",
-    borderRadius: "50%",
-    background: "rgba(255,255,255,0.2)",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backdropFilter: "blur(4px)",
-  },
-  heartBtn: {
-    width: "40px",
-    height: "40px",
-    borderRadius: "50%",
-    background: "rgba(255,255,255,0.2)",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backdropFilter: "blur(4px)",
-  },
-  heroContent: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    padding: "0 4px 12px",
-  },
-  heroBadge: {
-    alignSelf: "flex-start",
-    background: "rgba(255,255,255,0.25)",
-    color: "#fff",
-    fontSize: "11px",
-    fontWeight: "700",
-    padding: "3px 10px",
-    borderRadius: "9999px",
-    backdropFilter: "blur(4px)",
-  },
-  heroIcon: { fontSize: "36px" },
-  heroTitle: {
-    fontSize: "22px",
-    fontWeight: "800",
-    color: "#fff",
-    lineHeight: "1.25",
-    margin: 0,
-    maxWidth: "320px",
-  },
-  content: {
-    padding: "20px 20px 0",
-    display: "flex",
-    flexDirection: "column",
-    gap: "24px",
-    maxWidth: "700px",
-    margin: "0 auto",
-  },
-  infoCard: {
-    background: "#fff",
-    borderRadius: "16px",
-    padding: "16px 20px",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.07)",
-    marginTop: "-24px",
-  },
-  infoItem: {
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    minWidth: 0,
-  },
-  infoLabel: {
-    fontSize: "11px",
-    color: "#9e9e9e",
-    margin: "0 0 2px",
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-  },
-  infoValue: {
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "#1a1a2e",
-    margin: 0,
-  },
-  infoDivider: {
-    width: "1px",
-    height: "36px",
-    background: "#f0f0f0",
-    flexShrink: 0,
-  },
-  section: {},
-  sectionTitle: {
-    fontSize: "17px",
-    fontWeight: "700",
-    color: "#1a1a2e",
-    margin: "0 0 12px",
-  },
-  description: {
-    fontSize: "14.5px",
-    color: "#555",
-    lineHeight: "1.7",
-    margin: 0,
-  },
-  ticketOptions: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "10px",
-    marginBottom: "16px",
-  },
-  ticketOpt: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
-    padding: "14px",
-    borderRadius: "12px",
-    cursor: "pointer",
-    background: "#fff",
-    border: "2px solid #e0e6ed",
-    textAlign: "left",
-    fontFamily: "inherit",
-    transition: "all 0.15s",
-  },
-  ticketOptActive: { border: "2px solid #1565c0", background: "#f0f6ff" },
-  ticketOptTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  ticketOptName: { fontSize: "13px", fontWeight: "600", color: "#1a1a2e" },
-  checkMark: { fontSize: "13px", color: "#1565c0", fontWeight: "700" },
-  ticketOptPrice: { fontSize: "15px", fontWeight: "700" },
-  quantityRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    background: "#fff",
-    borderRadius: "12px",
-    padding: "14px 18px",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-  },
-  quantityLabel: { fontSize: "15px", fontWeight: "600", color: "#1a1a2e" },
-  quantityControls: { display: "flex", alignItems: "center", gap: "16px" },
-  qtyBtn: {
-    width: "34px",
-    height: "34px",
-    borderRadius: "50%",
-    background: "#f0f6ff",
-    color: "#1565c0",
-    border: "1.5px solid #c5d9f5",
-    fontSize: "20px",
-    fontWeight: "700",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "inherit",
-    transition: "background 0.15s",
-  },
-  qtyValue: {
-    fontSize: "17px",
-    fontWeight: "700",
-    color: "#1a1a2e",
-    minWidth: "24px",
-    textAlign: "center",
-  },
-  categoryTag: {
-    alignSelf: "flex-start",
-    fontSize: "12px",
-    fontWeight: "700",
-    padding: "4px 12px",
-    borderRadius: "9999px",
-  },
-  checkoutBar: {
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    background: "#fff",
-    borderTop: "1px solid #e0e6ed",
-    padding: "14px 20px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "16px",
-    boxShadow: "0 -4px 16px rgba(0,0,0,0.08)",
-    zIndex: 100,
-  },
-  checkoutLeft: { display: "flex", flexDirection: "column", gap: "2px" },
-  checkoutTotal: { fontSize: "20px", fontWeight: "800", color: "#1a1a2e" },
-  checkoutMeta: { fontSize: "12px", color: "#9e9e9e" },
-  checkoutBtn: {
-    flex: 1,
-    maxWidth: "200px",
-    padding: "14px 24px",
-    background: "linear-gradient(135deg, #0d1b4b, #1565c0)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "12px",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-    fontFamily: "inherit",
-    transition: "opacity 0.2s",
-  },
-  // Skeleton
-  skeleton: { minHeight: "100vh" },
-  skeletonBlock: {
-    background: "linear-gradient(90deg, #e0e6ed 25%, #f4f6fb 50%, #e0e6ed 75%)",
-    backgroundSize: "200% 100%",
-  },
-  skeletonContent: {
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "14px",
-  },
-  skeletonLine: { height: "16px", borderRadius: "8px", background: "#e0e6ed" },
-  errorState: {
-    minHeight: "70vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "12px",
-    padding: "24px",
-  },
-  errorIcon: { fontSize: "42px" },
-  errorText: {
-    color: "#e53935",
-    fontSize: "15px",
-    textAlign: "center",
-    margin: 0,
-  },
-  retryBtn: {
-    padding: "12px 18px",
-    borderRadius: "10px",
-    border: "none",
-    background: "#1565c0",
-    color: "#fff",
-    fontWeight: "700",
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-};

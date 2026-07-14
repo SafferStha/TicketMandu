@@ -2,11 +2,11 @@
 
 const db = require('../config/db');
 
-const SAFE_COLUMNS = 'id, name, email, image, role, created_at';
+const SAFE_COLUMNS = 'id, name, email, image, phone, role, is_active, deleted_at, last_login_at, created_at, updated_at';
 
 const findByEmail = async (email) => {
   const { rows } = await db.query(
-    'SELECT * FROM users WHERE email = $1 LIMIT 1',
+    `SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL LIMIT 1`,
     [email]
   );
   return rows[0] || null;
@@ -31,7 +31,7 @@ const create = async ({ name, email, passwordHash, image = null, role = 'user' }
 };
 
 const updateById = async (id, fields) => {
-  const allowed = new Set(['name', 'email', 'password', 'image', 'role']);
+  const allowed = new Set(['name', 'email', 'password', 'image', 'phone', 'role', 'is_active', 'deleted_at']);
   const entries = Object.entries(fields).filter(([k, v]) => allowed.has(k) && v !== undefined);
   if (entries.length === 0) return findById(id);
 
@@ -39,7 +39,7 @@ const updateById = async (id, fields) => {
   const values = entries.map(([, v]) => v);
 
   const { rows } = await db.query(
-    `UPDATE users SET ${setClauses} WHERE id = $1
+    `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = $1
      RETURNING ${SAFE_COLUMNS}`,
     [id, ...values]
   );
@@ -47,7 +47,10 @@ const updateById = async (id, fields) => {
 };
 
 const deleteById = async (id) => {
-  await db.query('DELETE FROM users WHERE id = $1', [id]);
+  await db.query(
+    'UPDATE users SET deleted_at = NOW(), is_active = false, updated_at = NOW() WHERE id = $1',
+    [id]
+  );
 };
 
 const updateLastLogin = async (id) => {
@@ -57,13 +60,49 @@ const updateLastLogin = async (id) => {
   );
 };
 
-const findAll = async ({ limit = 20, offset = 0 } = {}) => {
+const findAll = async ({ limit = 20, offset = 0, q = '', role = '', status = '' } = {}) => {
+  const conditions = ['deleted_at IS NULL'];
+  const params = [];
+  let idx = 1;
+
+  if (q) {
+    conditions.push(`(LOWER(name) LIKE $${idx} OR LOWER(email) LIKE $${idx})`);
+    params.push(`%${String(q).toLowerCase()}%`);
+    idx += 1;
+  }
+
+  if (role) {
+    conditions.push(`role = $${idx}`);
+    params.push(role);
+    idx += 1;
+  }
+
+  if (status === 'active') {
+    conditions.push(`is_active = true`);
+  }
+
+  if (status === 'inactive') {
+    conditions.push(`is_active = false`);
+  }
+
+  const where = `WHERE ${conditions.join(' AND ')}`;
   const { rows } = await db.query(
-    `SELECT ${SAFE_COLUMNS} FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-    [limit, offset]
+    `SELECT ${SAFE_COLUMNS} FROM users ${where} ORDER BY created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`,
+    [...params, limit, offset]
   );
-  const { rows: countRows } = await db.query('SELECT COUNT(*) FROM users');
+  const { rows: countRows } = await db.query(
+    `SELECT COUNT(*) FROM users ${where}`,
+    params
+  );
   return { users: rows, total: parseInt(countRows[0].count, 10) };
+};
+
+const findByIdForAdmin = async (id) => {
+  const { rows } = await db.query(
+    `SELECT ${SAFE_COLUMNS}, password FROM users WHERE id = $1 LIMIT 1`,
+    [id]
+  );
+  return rows[0] || null;
 };
 
 // ── Refresh token store (uses refresh_tokens table if it exists) ─────────────
@@ -111,6 +150,7 @@ const revokeAllUserTokens = async (userId) => {
 module.exports = {
   findByEmail,
   findById,
+  findByIdForAdmin,
   create,
   updateById,
   deleteById,

@@ -4,20 +4,27 @@ const express = require('express');
 const router = express.Router();
 
 const eventController = require('../controllers/event.controller');
-const { authenticate } = require('../middleware/auth.middleware');
-const { requireOrganizer, requireAdmin } = require('../middleware/rbac.middleware');
+const reviewController = require('../controllers/review.controller');
+const { authenticate, optionalAuth } = require('../middleware/auth.middleware');
+const { requireOrganizer } = require('../middleware/rbac.middleware');
 const { validate, validateQuery } = require('../middleware/validate.middleware');
 const { searchSchema, createEventSchema, updateEventSchema } = require('../validators/event.validator');
 
 // Public routes — no auth required
 // GET /api/events
-router.get('/', eventController.listEvents);
+router.get('/', optionalAuth, eventController.listEvents);
 
 // GET /api/events/featured — must come before /:id
 router.get('/featured', eventController.getFeatured);
 
 // GET /api/events/search
-router.get('/search', validateQuery(searchSchema), eventController.search);
+router.get('/search', optionalAuth, validateQuery(searchSchema), eventController.search);
+
+// GET /api/events/:id/ticket-types
+router.get('/:id/ticket-types', eventController.getTicketTypes);
+
+// GET /api/events/:id/reviews
+router.get('/:id/reviews', reviewController.listByEvent);
 
 // GET /api/events/:id
 router.get('/:id', eventController.getById);
@@ -29,7 +36,10 @@ router.post('/', authenticate, requireOrganizer, validate(createEventSchema), ev
 // PUT /api/events/:id
 router.put('/:id', authenticate, requireOrganizer, validate(updateEventSchema), eventController.updateEvent);
 
+// PATCH /api/events/:id
+router.patch('/:id', authenticate, requireOrganizer, validate(updateEventSchema), eventController.updateEvent);
+
 // DELETE /api/events/:id
-router.delete('/:id', authenticate, requireAdmin, eventController.deleteEvent);
+router.delete('/:id', authenticate, requireOrganizer, eventController.deleteEvent);
 
 module.exports = router;

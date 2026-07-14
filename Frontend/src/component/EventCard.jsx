@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ticketsAPI, getErrorMessage } from "../api";
+import { favoritesAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
 
 const HeartIcon = ({ filled }) => (
@@ -40,23 +40,14 @@ const categoryColors = {
 export default function EventCard({ event }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
-  const [booking, setBooking] = useState(false);
   const catStyle = categoryColors[event.category] || {
     bg: "#f5f5f5",
     color: "#616161",
   };
 
-  const handleBook = async (e) => {
+  const handleBook = (e) => {
     e.stopPropagation();
-    setBooking(true);
-    try {
-      await ticketsAPI.bookTicket(event.id);
-      toast.success("🎫 Ticket booked! Check My Tickets.");
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to book ticket"));
-    } finally {
-      setBooking(false);
-    }
+    navigate(`/events/${event.id}`);
   };
 
   return (
@@ -93,11 +84,10 @@ export default function EventCard({ event }) {
             {event.category}
           </span>
           <button
-            style={{ ...styles.bookBtn, opacity: booking ? 0.6 : 1 }}
+            style={styles.bookBtn}
             onClick={handleBook}
-            disabled={booking}
           >
-            {booking ? "…" : "Get Tickets"}
+            Get Tickets
           </button>
         </div>
       </div>
@@ -105,9 +95,15 @@ export default function EventCard({ event }) {
       {/* Heart */}
       <button
         style={styles.heartBtn}
-        onClick={(e) => {
+        onClick={async (e) => {
           e.stopPropagation();
-          setLiked((l) => !l);
+          try {
+            if (liked) await favoritesAPI.remove(event.id);
+            else await favoritesAPI.add(event.id);
+            setLiked((l) => !l);
+          } catch (err) {
+            toast.error(getErrorMessage(err, "Failed to update favorite"));
+          }
         }}
         aria-label="Favourite"
       >

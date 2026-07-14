@@ -1,23 +1,28 @@
-'use strict';
+"use strict";
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const ticketController = require('../controllers/ticket.controller');
-const { authenticate } = require('../middleware/auth.middleware');
-const { validate } = require('../middleware/validate.middleware');
-const { bookTicketSchema } = require('../validators/ticket.validator');
+const ticketController = require("../controllers/ticket.controller");
+const { authenticate } = require("../middleware/auth.middleware");
+const { validate } = require("../middleware/validate.middleware");
+const { checkInSchema } = require("../validators/ticket-admin.validator");
 
 // All ticket routes require authentication
 router.use(authenticate);
 
-// GET /api/tickets/stats — must come before /:id
-router.get('/stats', ticketController.getStats);
+// Specific routes must be declared before /:id routes.
+router.get("/stats", ticketController.getStats);
+router.get("/my", ticketController.getMyTickets);
+router.patch("/check-in", validate(checkInSchema), ticketController.checkIn);
 
-// GET /api/tickets — get user's tickets
-router.get('/', ticketController.getMyTickets);
-
-// POST /api/tickets — book a ticket
-router.post('/', validate(bookTicketSchema), ticketController.bookTicket);
+router.get("/", ticketController.listTickets);
+router.get("/:id", ticketController.getTicket);
+router.patch("/:id/cancel", ticketController.cancelTicket);
+router.patch(
+  "/:id/check-in",
+  validate(checkInSchema),
+  ticketController.checkIn,
+);
 
 module.exports = router;

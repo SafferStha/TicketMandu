@@ -55,6 +55,10 @@ const login = async ({ email, password }, ipAddress) => {
     throw createAppError(ERRORS.INVALID_CREDENTIALS.message, 401, ERRORS.INVALID_CREDENTIALS.code);
   }
 
+  if (user.deleted_at || user.is_active === false) {
+    throw createAppError('Account is inactive', 403, 'ACCOUNT_INACTIVE');
+  }
+
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
     throw createAppError(ERRORS.INVALID_CREDENTIALS.message, 401, ERRORS.INVALID_CREDENTIALS.code);

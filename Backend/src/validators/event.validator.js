@@ -5,6 +5,11 @@ const { z } = require('zod');
 const searchSchema = z.object({
   q: z.string().trim().optional(),
   category: z.string().trim().optional(),
+  status: z.enum(['draft', 'published', 'cancelled', 'completed']).optional(),
+  featured: z.union([z.string(), z.boolean()]).optional(),
+  scope: z.enum(['public', 'all']).optional(),
+  dateFrom: z.string().trim().optional(),
+  dateTo: z.string().trim().optional(),
   page: z
     .string()
     .regex(/^\d+$/, 'page must be a number')
@@ -38,6 +43,14 @@ const createEventSchema = z.object({
   category: z.enum(['Music', 'Sports', 'Arts', 'Comedy', 'Family', 'Theater']),
   icon: z.string().max(10).optional(),
   featured: z.boolean().optional().default(false),
+  description: z.string().max(5000).optional(),
+  cover_image_url: z.string().url().optional().or(z.literal('')),
+  starts_at: z.string().trim().optional(),
+  ends_at: z.string().trim().optional(),
+  status: z.enum(['draft', 'published', 'cancelled', 'completed']).optional(),
+  organizer_id: z.coerce.number().int().positive().optional(),
+  venue_id: z.coerce.number().int().positive().optional(),
+  total_capacity: z.coerce.number().int().positive().optional(),
 });
 
 const updateEventSchema = createEventSchema.partial();

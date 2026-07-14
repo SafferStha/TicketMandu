@@ -6,16 +6,16 @@ const cleanParams = (params = {}) =>
     Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
   );
 
-const normalizeEventId = (eventId) => {
-  const numericId = Number(eventId);
-  if (!Number.isInteger(numericId) || numericId <= 0) {
-    throw new Error('Invalid event ID');
-  }
-  return numericId;
-};
-
 export const ticketsAPI = {
   getMyTickets: async (params) => {
+    const response = await API.get('/tickets/my', { params: cleanParams(params) });
+    return {
+      tickets: unwrapList(response),
+      pagination: unwrapPagination(response),
+    };
+  },
+
+  getAll: async (params) => {
     const response = await API.get('/tickets', { params: cleanParams(params) });
     return {
       tickets: unwrapList(response),
@@ -23,11 +23,23 @@ export const ticketsAPI = {
     };
   },
 
-  bookTicket: async (eventId, seat) => {
-    const payload = { eventId: normalizeEventId(eventId) };
-    if (seat?.trim()) payload.seat = seat.trim();
+  getById: async (id) => {
+    const ticketId = Number(id);
+    if (!Number.isInteger(ticketId) || ticketId <= 0) {
+      throw new Error('Invalid ticket ID');
+    }
 
-    const response = await API.post('/tickets', payload);
+    const response = await API.get(`/tickets/${ticketId}`);
+    return unwrapResource(response, 'ticket');
+  },
+
+  cancel: async (id) => {
+    const response = await API.patch(`/tickets/${id}/cancel`);
+    return unwrapResource(response, 'ticket');
+  },
+
+  checkIn: async (ticketNumber) => {
+    const response = await API.patch('/tickets/check-in', { ticketNumber });
     return unwrapResource(response, 'ticket');
   },
 

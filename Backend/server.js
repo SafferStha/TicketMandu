@@ -1,88 +1,94 @@
-'use strict';
+"use strict";
 
 // ── Environment & Logging must load first ─────────────────────────────────────
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Ensure logs directory exists before Winston tries to write to it
-const logsDir = path.join(__dirname, 'logs');
+const logsDir = path.join(__dirname, "logs");
 if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
 
 // Load env config (throws if required vars are missing)
 let env;
 try {
-  env = require('./src/config/env');
+  env = require("./src/config/env");
 } catch (envErr) {
-  console.error('[startup] Environment configuration error:', envErr.message);
+  console.error("[startup] Environment configuration error:", envErr.message);
   process.exit(1);
 }
 
-const logger = require('./src/utils/logger.util');
-const { morganMiddleware } = require('./src/utils/logger.util');
+const logger = require("./src/utils/logger.util");
+const { morganMiddleware } = require("./src/utils/logger.util");
 
 // ── Express & Security Middleware ─────────────────────────────────────────────
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
 
-const { generalLimiter } = require('./src/middleware/rateLimit.middleware');
-const errorHandler = require('./src/middleware/errorHandler.middleware');
-const apiRoutes = require('./src/routes/index');
+const { generalLimiter } = require("./src/middleware/rateLimit.middleware");
+const errorHandler = require("./src/middleware/errorHandler.middleware");
+const apiRoutes = require("./src/routes/index");
 
 const app = express();
 
 // Security headers
-app.use(helmet({
-  crossOriginEmbedderPolicy: false, // allow image embeds from CDN
-}));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false, // allow image embeds from CDN
+  }),
+);
 
 // CORS — restrict to known frontend origin
-app.use(cors({
-  origin: env.CORS_ORIGIN,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // HTTP request logging (Morgan → Winston)
 app.use(morganMiddleware);
 
 // Body parsers
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 // Serve uploaded files
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-app.use('/uploads', express.static(uploadsDir));
+app.use("/uploads", express.static(uploadsDir));
 
 // Global rate limiter (before routes)
-app.use('/api', generalLimiter);
+app.use("/api", generalLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 // New clean-architecture routes under /api
-app.use('/api', apiRoutes);
+app.use("/api", apiRoutes);
 
 // Root health check
-app.get('/', (_req, res) => {
+app.get("/", (_req, res) => {
   res.json({
     success: true,
-    message: 'TicketMandu API v2.0',
-    docs: '/api/health',
+    message: "TicketMandu API v2.0",
+    docs: "/api/health",
     timestamp: new Date().toISOString(),
   });
 });
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found', code: 'NOT_FOUND' });
+  res
+    .status(404)
+    .json({ success: false, message: "Route not found", code: "NOT_FOUND" });
 });
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use(errorHandler);
 
 // ── Database bootstrap ────────────────────────────────────────────────────────
-const db = require('./src/config/db');
+const db = require("./src/config/db");
 
 const bootstrapDatabase = async () => {
   // Core tables — kept compatible with existing v1 schema
@@ -119,11 +125,29 @@ const bootstrapDatabase = async () => {
       id         SERIAL       PRIMARY KEY,
       user_id    INTEGER      NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
       event_id   INTEGER      NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-      status     VARCHAR(20)  NOT NULL DEFAULT 'upcoming',
+      status     VARCHAR(20)  NOT NULL DEFAULT 'active',
       seat       VARCHAR(255) NOT NULL DEFAULT 'General Admission',
       created_at TIMESTAMP    NOT NULL DEFAULT NOW()
     )
   `);
+
+  await db
+    .query(`UPDATE tickets SET status = 'active' WHERE status IS NULL OR status IN ('upcoming', 'past')`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE tickets ALTER COLUMN status SET DEFAULT 'active'`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE tickets ALTER COLUMN status SET NOT NULL`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_status_check`)
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE tickets ADD CONSTRAINT tickets_status_check CHECK (status IN ('active', 'used', 'cancelled', 'refunded'))`,
+    )
+    .catch(() => {});
 
   // Refresh tokens table (Phase 4 auth improvements)
   await db.query(`
@@ -138,18 +162,439 @@ const bootstrapDatabase = async () => {
     )
   `);
 
-  // Add role column if missing (migrating from v1)
-  await db.query(`
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user'
-  `).catch(() => {}); // PG may not support IF NOT EXISTS for ALTER — ignore error
+  // Additive schema upgrades for the business-ready ticketing model.
+  await db
+    .query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)`)
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true`,
+    )
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP`)
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`,
+    )
+    .catch(() => {});
+
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS slug VARCHAR(300)`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS organizer_id INTEGER`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS venue_id INTEGER`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS description TEXT`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS cover_image_url TEXT`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS starts_at TIMESTAMP`)
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS ends_at TIMESTAMP`)
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE events ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'`,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE events ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT false`,
+    )
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS total_capacity INTEGER`)
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE events ADD COLUMN IF NOT EXISTS tickets_sold INTEGER NOT NULL DEFAULT 0`,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE events ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`,
+    )
+    .catch(() => {});
+  await db
+    .query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP`)
+    .catch(() => {});
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS venues (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(200) NOT NULL,
+      slug VARCHAR(200) NOT NULL UNIQUE,
+      address VARCHAR(255),
+      city VARCHAR(100) NOT NULL DEFAULT 'Kathmandu',
+      country VARCHAR(100) NOT NULL DEFAULT 'Nepal',
+      capacity INTEGER,
+      image_url TEXT,
+      map_url TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS event_categories (
+      id SMALLSERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      slug VARCHAR(100) NOT NULL UNIQUE,
+      icon VARCHAR(50),
+      sort_order SMALLINT NOT NULL DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS organizers (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      organization_name VARCHAR(200) NOT NULL,
+      slug VARCHAR(200) NOT NULL UNIQUE,
+      description TEXT,
+      logo_url TEXT,
+      website TEXT,
+      is_verified BOOLEAN NOT NULL DEFAULT false,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS event_images (
+      id SERIAL PRIMARY KEY,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      alt_text VARCHAR(255),
+      sort_order SMALLINT NOT NULL DEFAULT 0,
+      is_cover BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ticket_types (
+      id SERIAL PRIMARY KEY,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      price DECIMAL(10,2) NOT NULL,
+      currency CHAR(3) NOT NULL DEFAULT 'NPR',
+      quantity INTEGER NOT NULL DEFAULT 100,
+      quantity_sold INTEGER NOT NULL DEFAULT 0,
+      max_per_order SMALLINT NOT NULL DEFAULT 10,
+      sale_starts_at TIMESTAMP,
+      sale_ends_at TIMESTAMP,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      sort_order SMALLINT NOT NULL DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      order_number VARCHAR(30) NOT NULL UNIQUE,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
+      service_fee NUMERIC(10,2) NOT NULL DEFAULT 0,
+      discount_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+      total_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+      currency CHAR(3) NOT NULL DEFAULT 'NPR',
+      expires_at TIMESTAMP,
+      confirmed_at TIMESTAMP,
+      cancelled_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE RESTRICT,
+      ticket_type_id INTEGER NOT NULL REFERENCES ticket_types(id) ON DELETE RESTRICT,
+      quantity INTEGER NOT NULL CHECK (quantity > 0),
+      unit_price NUMERIC(10,2) NOT NULL,
+      subtotal NUMERIC(10,2) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      payment_method VARCHAR(20) NOT NULL DEFAULT 'mock',
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      amount NUMERIC(10,2) NOT NULL,
+      currency CHAR(3) NOT NULL DEFAULT 'NPR',
+      gateway_reference VARCHAR(255),
+      gateway_payload JSONB,
+      refunded_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_number VARCHAR(40)
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS qr_code_value VARCHAR(255)
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS order_id INTEGER
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_type_id INTEGER
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS seat_id INTEGER
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMP
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP
+  `,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `
+    ALTER TABLE tickets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+  `,
+    )
+    .catch(() => {});
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (user_id, event_id)
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+      body TEXT,
+      is_visible BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, event_id)
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type VARCHAR(50) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      body TEXT NOT NULL,
+      data JSONB,
+      is_read BOOLEAN NOT NULL DEFAULT false,
+      read_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id BIGSERIAL PRIMARY KEY,
+      actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      actor_ip VARCHAR(45),
+      action VARCHAR(100) NOT NULL,
+      resource_type VARCHAR(50),
+      resource_id INTEGER,
+      old_values JSONB,
+      new_values JSONB,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS seat_maps (
+      id SERIAL PRIMARY KEY,
+      venue_id INTEGER REFERENCES venues(id) ON DELETE SET NULL,
+      name VARCHAR(200) NOT NULL,
+      rows SMALLINT NOT NULL DEFAULT 10,
+      seats_per_row SMALLINT NOT NULL DEFAULT 20,
+      map_config JSONB,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS seats (
+      id SERIAL PRIMARY KEY,
+      seat_map_id INTEGER NOT NULL REFERENCES seat_maps(id) ON DELETE CASCADE,
+      row_label VARCHAR(5) NOT NULL,
+      seat_number SMALLINT NOT NULL,
+      section VARCHAR(50),
+      category VARCHAR(50) NOT NULL DEFAULT 'general',
+      is_blocked BOOLEAN NOT NULL DEFAULT false,
+      UNIQUE (seat_map_id, row_label, seat_number)
+    )
+  `);
+
+  await db
+    .query(`ALTER TABLE venues ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,7)`)
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE venues ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,7)`,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `ALTER TABLE venues ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active'`,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `ALTER TABLE event_categories ADD COLUMN IF NOT EXISTS description TEXT`,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `ALTER TABLE seats ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'available'`,
+    )
+    .catch(() => {});
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS coupons (
+      id SERIAL PRIMARY KEY,
+      code VARCHAR(40) NOT NULL UNIQUE,
+      discount_type VARCHAR(20) NOT NULL DEFAULT 'percentage',
+      discount_value NUMERIC(10,2) NOT NULL DEFAULT 0,
+      usage_limit INTEGER,
+      used_count INTEGER NOT NULL DEFAULT 0,
+      starts_at TIMESTAMP,
+      expires_at TIMESTAMP,
+      event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+      created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP
+    )
+  `);
+
+  await db
+    .query(`CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons (code)`)
+    .catch(() => {});
+  await db
+    .query(
+      `CREATE INDEX IF NOT EXISTS idx_coupons_event_id ON coupons (event_id)`,
+    )
+    .catch(() => {});
+
+  await db
+    .query(`CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders (user_id)`)
+    .catch(() => {});
+  await db
+    .query(`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status)`)
+    .catch(() => {});
+  await db
+    .query(
+      `CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments (order_id)`,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments (user_id)`,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `CREATE INDEX IF NOT EXISTS idx_tickets_order_id ON tickets (order_id)`,
+    )
+    .catch(() => {});
+  await db
+    .query(
+      `CREATE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets (ticket_number)`,
+    )
+    .catch(() => {});
+
+  // Add role column if missing (migrating from v1)
+  await db
+    .query(
+      `
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user'
+  `,
+    )
+    .catch(() => {}); // PG may not support IF NOT EXISTS for ALTER — ignore error
+
+  await db
+    .query(
+      `
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP
-  `).catch(() => {});
+  `,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `
+    UPDATE event_categories SET is_active = true WHERE is_active IS NULL
+  `,
+    )
+    .catch(() => {});
 
   // Seed events if empty
-  const { rows } = await db.query('SELECT COUNT(*) FROM events');
-  if (rows[0].count === '0') {
+  const { rows } = await db.query("SELECT COUNT(*) FROM events");
+  if (rows[0].count === "0") {
     await db.query(`
       INSERT INTO events (name, date, time, venue, price, category, icon, featured, featured_bg) VALUES
         ('Taylor Swift | The Eras Tour',        'Dec 15, 2026', '7:00 PM',  'SoFi Stadium, Los Angeles, CA',               250,  'Music',   '🎤', true,  'linear-gradient(135deg, #4a0080 0%, #7b1fa2 100%)'),
@@ -173,10 +618,103 @@ const bootstrapDatabase = async () => {
         ('Beyoncé: Renaissance World Tour',     'Apr 28, 2027', '8:00 PM',  'AT&T Stadium, Arlington, TX',                195,  'Music',   '🎤', false, null),
         ('Van Gogh: The Immersive Experience',  'Sep 28, 2026', '11:00 AM', 'The Lighthouse, New York, NY',                42,  'Arts',    '🎨', false, null)
     `);
-    logger.info('[db] Seeded initial events');
+    logger.info("[db] Seeded initial events");
   }
 
-  logger.info('[db] Database bootstrap complete');
+  const { rows: categoryRows } = await db.query(
+    "SELECT COUNT(*) FROM event_categories",
+  );
+  if (categoryRows[0].count === "0") {
+    await db.query(`
+      INSERT INTO event_categories (name, slug, icon, sort_order) VALUES
+        ('Music', 'music', '🎵', 1),
+        ('Sports', 'sports', '⚽', 2),
+        ('Arts', 'arts', '🎨', 3),
+        ('Comedy', 'comedy', '😂', 4),
+        ('Family', 'family', '👨‍👩‍👧', 5),
+        ('Theater', 'theater', '🎭', 6)
+    `);
+  }
+
+  const { hashPassword } = require("./src/utils/hash.util");
+  const demoPasswordHash = await hashPassword("Demo@1234");
+  await db
+    .query(
+      `INSERT INTO users (name, email, password, role, is_active)
+     VALUES
+       ('TicketMandu Admin', 'admin@ticketmandu.com', $1, 'admin', true),
+       ('TicketMandu Organizer', 'organizer@ticketmandu.com', $1, 'organizer', true),
+       ('TicketMandu User', 'user@ticketmandu.com', $1, 'user', true)
+     ON CONFLICT (email) DO NOTHING`,
+      [demoPasswordHash],
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `
+    INSERT INTO venues (name, slug, address, city, country, capacity, status)
+    VALUES
+      ('Kathmandu Arena', 'kathmandu-arena', 'Tripureshwor', 'Kathmandu', 'Nepal', 12000, 'active'),
+      ('Patan Expo Center', 'patan-expo-center', 'Pulchowk', 'Lalitpur', 'Nepal', 4500, 'active')
+    ON CONFLICT (slug) DO NOTHING
+  `,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `
+    INSERT INTO organizers (user_id, organization_name, slug, description, website, is_verified, is_active)
+    SELECT u.id, 'TicketMandu Live', 'ticketmandu-live', 'Official demo organizer for TicketMandu events.', 'https://ticketmandu.local', true, true
+    FROM users u
+    WHERE u.email = 'organizer@ticketmandu.com'
+    ON CONFLICT (slug) DO NOTHING
+  `,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `
+    UPDATE events e
+    SET organizer_id = u.id,
+        description = COALESCE(e.description, 'A premium live event experience curated by TicketMandu with secure booking, digital tickets, and fast entry.'),
+        status = COALESCE(e.status, 'published'),
+        total_capacity = COALESCE(e.total_capacity, 1000)
+    FROM users u
+    WHERE u.email = 'organizer@ticketmandu.com'
+      AND (e.organizer_id IS NULL OR e.organizer_id IN (SELECT id FROM organizers WHERE slug = 'ticketmandu-live'))
+  `,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `
+    INSERT INTO ticket_types (event_id, name, description, price, currency, quantity, quantity_sold, max_per_order, is_active, sort_order)
+    SELECT e.id, 'General Admission', 'Standard entry with access to the main event area.', e.price, 'NPR', 250, 0, 6, true, 1
+    FROM events e
+    WHERE e.deleted_at IS NULL
+      AND NOT EXISTS (SELECT 1 FROM ticket_types tt WHERE tt.event_id = e.id AND tt.name = 'General Admission')
+  `,
+    )
+    .catch(() => {});
+
+  await db
+    .query(
+      `
+    INSERT INTO ticket_types (event_id, name, description, price, currency, quantity, quantity_sold, max_per_order, is_active, sort_order)
+    SELECT e.id, 'VIP', 'Priority entry and premium viewing area.', ROUND((COALESCE(e.price, 50) * 1.8)::numeric, 2), 'NPR', 80, 0, 4, true, 2
+    FROM events e
+    WHERE e.featured = true
+      AND e.deleted_at IS NULL
+      AND NOT EXISTS (SELECT 1 FROM ticket_types tt WHERE tt.event_id = e.id AND tt.name = 'VIP')
+  `,
+    )
+    .catch(() => {});
+
+  logger.info("[db] Database bootstrap complete");
 };
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
@@ -189,15 +727,20 @@ const shutdown = async (signal) => {
   }
   process.exit(0);
 };
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
-process.on('unhandledRejection', (reason) => {
-  logger.error('[server] Unhandled promise rejection', { reason: String(reason) });
+process.on("unhandledRejection", (reason) => {
+  logger.error("[server] Unhandled promise rejection", {
+    reason: String(reason),
+  });
 });
 
-process.on('uncaughtException', (err) => {
-  logger.error('[server] Uncaught exception', { message: err.message, stack: err.stack });
+process.on("uncaughtException", (err) => {
+  logger.error("[server] Uncaught exception", {
+    message: err.message,
+    stack: err.stack,
+  });
   process.exit(1);
 });
 
@@ -209,11 +752,13 @@ const startServer = async () => {
 
     const PORT = env.PORT || 8000;
     app.listen(PORT, () => {
-      logger.info(`[server] TicketMandu API running on http://localhost:${PORT}`);
+      logger.info(
+        `[server] TicketMandu API running on http://localhost:${PORT}`,
+      );
       logger.info(`[server] Environment: ${env.NODE_ENV}`);
     });
   } catch (err) {
-    logger.error('[server] Failed to start', { message: err.message });
+    logger.error("[server] Failed to start", { message: err.message });
     process.exit(1);
   }
 };

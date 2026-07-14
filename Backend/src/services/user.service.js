@@ -45,10 +45,44 @@ const updateMe = async (userId, { name, email, password, image }) => {
   return updated;
 };
 
-const listUsers = async (page, limit) => {
+const listUsers = async (query = {}) => {
+  const { page, limit, q, role, status } = query;
   const { limit: safeLimit, offset, buildMeta } = paginate(page, limit);
-  const { users, total } = await userRepo.findAll({ limit: safeLimit, offset });
+  const { users, total } = await userRepo.findAll({ limit: safeLimit, offset, q, role, status });
   return { users, pagination: buildMeta(total) };
+};
+
+const createUser = async ({ name, email, password, role }) => {
+  const existing = await userRepo.findByEmail(email);
+  if (existing) {
+    throw createAppError(ERRORS.DUPLICATE_EMAIL.message, 409, ERRORS.DUPLICATE_EMAIL.code);
+  }
+
+  const passwordHash = await hashPassword(password);
+  return userRepo.create({ name, email, passwordHash, role });
+};
+
+const updateUser = async (userId, data) => {
+  const user = await userRepo.findByIdForAdmin(userId);
+  if (!user) throw createAppError(ERRORS.NOT_FOUND.message, 404, ERRORS.NOT_FOUND.code);
+
+  const updates = {};
+  if (data.name !== undefined) updates.name = data.name;
+  if (data.email !== undefined) updates.email = data.email;
+  if (data.phone !== undefined) updates.phone = data.phone;
+  if (data.role !== undefined) updates.role = data.role;
+  if (data.is_active !== undefined) updates.is_active = data.is_active;
+  if (data.password) updates.password = await hashPassword(data.password);
+
+  const updated = await userRepo.updateById(userId, updates);
+  if (!updated) throw createAppError(ERRORS.NOT_FOUND.message, 404, ERRORS.NOT_FOUND.code);
+  return updated;
+};
+
+const setStatus = async (userId, isActive) => {
+  const updated = await userRepo.updateById(userId, { is_active: isActive });
+  if (!updated) throw createAppError(ERRORS.NOT_FOUND.message, 404, ERRORS.NOT_FOUND.code);
+  return updated;
 };
 
 const deleteUser = async (userId) => {
@@ -57,4 +91,4 @@ const deleteUser = async (userId) => {
   await userRepo.deleteById(userId);
 };
 
-module.exports = { getMe, updateMe, listUsers, deleteUser };
+module.exports = { getMe, updateMe, listUsers, createUser, updateUser, setStatus, deleteUser };

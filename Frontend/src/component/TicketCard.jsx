@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ticketsAPI, getErrorMessage } from "../api";
-import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const CalIcon = () => (
   <svg
@@ -31,24 +30,17 @@ const TicketIcon = () => (
 );
 
 export default function TicketCard({ ticket }) {
-  const isUpcoming = ticket.status === "upcoming";
+  const navigate = useNavigate();
+  const isUpcoming = ticket.status === "active";
   const { event } = ticket;
-  const [booking, setBooking] = useState(false);
+  const [booking] = useState(false);
 
-  const handleBuyAgain = async () => {
-    setBooking(true);
-    try {
-      await ticketsAPI.bookTicket(event.id);
-      toast.success("🎫 Ticket booked! Check upcoming tickets.");
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to book ticket"));
-    } finally {
-      setBooking(false);
-    }
+  const handleBuyAgain = () => {
+    navigate(`/events/${event.id}`);
   };
 
   const handleViewTicket = () => {
-    toast("Digital ticket viewer coming soon!", { icon: "🎫" });
+    navigate(`/tickets/${ticket.id}`);
   };
 
   return (
@@ -74,7 +66,7 @@ export default function TicketCard({ ticket }) {
                 background: isUpcoming ? "#00c853" : "#757575",
               }}
             >
-              {isUpcoming ? "UPCOMING" : "PAST"}
+              {isUpcoming ? "ACTIVE" : ticket.status.toUpperCase()}
             </span>
           </div>
           <div style={styles.metaRow}>
@@ -90,6 +82,11 @@ export default function TicketCard({ ticket }) {
           {ticket.seat && (
             <div style={styles.metaRow}>
               <span style={styles.seatBadge}>🪑 {ticket.seat}</span>
+            </div>
+          )}
+          {ticket.ticketNumber && (
+            <div style={styles.metaRow}>
+              <span style={styles.seatBadge}>#{ticket.ticketNumber}</span>
             </div>
           )}
         </div>

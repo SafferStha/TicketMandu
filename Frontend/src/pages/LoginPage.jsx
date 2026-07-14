@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import { getHomeRoute } from "../utils/routes";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,9 +19,9 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await login(email, password);
+      const session = await login(email, password);
       toast.success("Welcome back!");
-      navigate("/");
+      navigate(getHomeRoute(session?.user?.role));
     } catch (err) {
       toast.error(err.message || "Login failed. Please try again.");
     } finally {

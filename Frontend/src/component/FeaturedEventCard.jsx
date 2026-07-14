@@ -1,23 +1,15 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ticketsAPI, getErrorMessage } from "../api";
+import { favoritesAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 export default function FeaturedEventCard({ event }) {
   const navigate = useNavigate();
-  const [booking, setBooking] = useState(false);
+  const [liked, setLiked] = useState(false);
 
-  const handleBook = async (e) => {
+  const handleBook = (e) => {
     e.stopPropagation();
-    setBooking(true);
-    try {
-      await ticketsAPI.bookTicket(event.id);
-      toast.success("🎫 Ticket booked! Check My Tickets.");
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to book ticket"));
-    } finally {
-      setBooking(false);
-    }
+    navigate(`/events/${event.id}`);
   };
 
   return (
@@ -47,14 +39,28 @@ export default function FeaturedEventCard({ event }) {
         <div style={styles.priceRow}>
           <p style={styles.price}>From ${event.price}</p>
           <button
-            style={{ ...styles.bookBtn, opacity: booking ? 0.6 : 1 }}
+            style={styles.bookBtn}
             onClick={handleBook}
-            disabled={booking}
           >
-            {booking ? "…" : "Book"}
+            Book
           </button>
         </div>
       </div>
+      <button
+        style={styles.favBtn}
+        onClick={async (e) => {
+          e.stopPropagation();
+          try {
+            if (liked) await favoritesAPI.remove(event.id);
+            else await favoritesAPI.add(event.id);
+            setLiked((current) => !current);
+          } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to update favorite'));
+          }
+        }}
+      >
+        {liked ? '♥' : '♡'}
+      </button>
     </div>
   );
 }
@@ -142,5 +148,18 @@ const styles = {
     cursor: "pointer",
     fontFamily: "inherit",
     transition: "opacity 0.2s",
+  },
+  favBtn: {
+    position: 'absolute',
+    bottom: '16px',
+    right: '16px',
+    border: 'none',
+    background: 'rgba(255,255,255,0.2)',
+    color: '#fff',
+    borderRadius: '9999px',
+    width: '36px',
+    height: '36px',
+    cursor: 'pointer',
+    fontSize: '18px',
   },
 };

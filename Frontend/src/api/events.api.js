@@ -30,6 +30,16 @@ export const eventsAPI = {
     return unwrapResource(response, 'event');
   },
 
+  getTicketTypes: async (id) => {
+    const eventId = Number(id);
+    if (!Number.isInteger(eventId) || eventId <= 0) {
+      throw new Error('Invalid event ID');
+    }
+
+    const response = await API.get(`/events/${eventId}/ticket-types`);
+    return unwrapResource(response, 'ticketTypes') || [];
+  },
+
   search: async ({ q, category, ...params } = {}) => {
     const response = await API.get('/events/search', {
       params: cleanParams({ q, category: category === 'all' ? undefined : category, ...params }),

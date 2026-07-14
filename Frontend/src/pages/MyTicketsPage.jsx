@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import TicketCard from "../component/TicketCard";
+import { Link, useNavigate } from "react-router-dom";
 import { ticketsAPI, getErrorMessage } from "../api";
+import PageHeader from "../components/PageHeader";
+
+const tabs = ["active", "used", "cancelled", "refunded", "expired"];
 
 export default function MyTicketsPage() {
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("active");
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,10 +16,9 @@ export default function MyTicketsPage() {
     Promise.resolve().then(() => {
       setLoading(true);
       setError(null);
-
       ticketsAPI
-        .getMyTickets()
-        .then(({ tickets }) => setTickets(tickets))
+        .getMyTickets({ limit: 100 })
+        .then(({ tickets }) => setTickets(tickets || []))
         .catch((err) => {
           setTickets([]);
           setError(getErrorMessage(err, "Failed to load tickets"));
@@ -24,138 +27,114 @@ export default function MyTicketsPage() {
     });
   }, []);
 
-  const filtered = tickets.filter((t) => t.status === activeTab);
+  const filtered = tickets.filter(
+    (ticket) => String(ticket.status || "").toLowerCase() === activeTab,
+  );
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.headerInner}>
-          <h1 style={styles.title}>My Tickets</h1>
-          <div style={styles.tabs}>
-            {["upcoming", "past"].map((tab) => (
+    <div className="tm-page">
+      <div className="tm-container">
+        <PageHeader
+          title="My Tickets"
+          subtitle="Access your digital tickets, QR values, status, and event details."
+        />
+        <div
+          className="tm-card flow-card"
+          style={{ marginBottom: 18, overflowX: "auto" }}
+        >
+          <div
+            className="tm-actions"
+            style={{ flexWrap: "nowrap", minWidth: 560 }}
+          >
+            {tabs.map((tab) => (
               <button
                 key={tab}
-                style={{
-                  ...styles.tab,
-                  color: activeTab === tab ? "#1565c0" : "#9e9e9e",
-                  borderBottom:
-                    activeTab === tab
-                      ? "2px solid #1565c0"
-                      : "2px solid transparent",
-                }}
+                className={activeTab === tab ? "tm-btn" : "tm-btn-secondary"}
                 onClick={() => setActiveTab(tab)}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab}{" "}
+                <span>
+                  (
+                  {
+                    tickets.filter(
+                      (t) => String(t.status || "").toLowerCase() === tab,
+                    ).length
+                  }
+                  )
+                </span>
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Ticket List */}
-      <div style={styles.content}>
         {loading ? (
-          <div style={styles.empty}>
-            <span style={styles.emptyIcon}>⏳</span>
-            <p style={styles.emptyTitle}>Loading tickets…</p>
+          <div className="tm-empty tm-card">
+            <span className="tm-empty-icon">⏳</span>
+            <h3>Loading tickets…</h3>
           </div>
         ) : error ? (
-          <div style={styles.empty}>
-            <span style={styles.emptyIcon}>⚠️</span>
-            <p style={styles.errorText}>{error}</p>
+          <div className="tm-empty tm-card">
+            <span className="tm-empty-icon">⚠️</span>
+            <p className="tm-error">{error}</p>
           </div>
         ) : filtered.length > 0 ? (
-          <div style={styles.ticketList}>
+          <div className="ticket-grid">
             {filtered.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} />
+              <article
+                key={ticket.id}
+                className="tm-card order-card"
+                onClick={() => navigate(`/tickets/${ticket.id}`)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="order-card-head">
+                  <div>
+                    <span className="tm-muted">Ticket</span>
+                    <h3 style={{ margin: "4px 0" }}>{ticket.ticketNumber}</h3>
+                    <p className="tm-muted" style={{ margin: 0 }}>
+                      {ticket.event?.name || ticket.eventName || "Event"}
+                    </p>
+                  </div>
+                  <span className={`tm-badge ${ticket.status}`}>
+                    {ticket.status}
+                  </span>
+                </div>
+                <div
+                  className="order-meta-grid"
+                  style={{ gridTemplateColumns: "1fr 1fr" }}
+                >
+                  <div className="order-meta-cell">
+                    <span className="tm-muted">Date</span>
+                    <strong>{ticket.event?.date || "TBA"}</strong>
+                  </div>
+                  <div className="order-meta-cell">
+                    <span className="tm-muted">Type</span>
+                    <strong>{ticket.ticketTypeName || "General"}</strong>
+                  </div>
+                </div>
+                <Link
+                  className="tm-btn-secondary"
+                  to={`/tickets/${ticket.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Open Ticket
+                </Link>
+              </article>
             ))}
           </div>
         ) : (
-          <div style={styles.empty}>
-            <span style={styles.emptyIcon}>🎫</span>
-            <p style={styles.emptyTitle}>No {activeTab} tickets</p>
-            <p style={styles.emptySub}>
-              {activeTab === "upcoming"
-                ? "Book an event to see your upcoming tickets here."
-                : "Your past tickets will appear here."}
+          <div className="tm-empty tm-card">
+            <span className="tm-empty-icon">🎫</span>
+            <h3>No {activeTab} tickets</h3>
+            <p>
+              Completed payments generate tickets automatically. Book an event
+              to see tickets here.
             </p>
+            <Link to="/discover" className="tm-btn">
+              Discover Events
+            </Link>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-const styles = {
-  page: { minHeight: "100vh", background: "#f4f6fb" },
-  header: {
-    background: "#ffffff",
-    borderBottom: "1px solid #e0e6ed",
-    padding: "24px 0 0",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-  },
-  headerInner: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "0 24px",
-  },
-  title: {
-    fontSize: "22px",
-    fontWeight: "700",
-    color: "#1a1a2e",
-    margin: "0 0 16px",
-  },
-  tabs: { display: "flex", gap: 0 },
-  tab: {
-    background: "none",
-    border: "none",
-    borderBottom: "2px solid transparent",
-    padding: "12px 28px",
-    fontSize: "14.5px",
-    fontWeight: "600",
-    cursor: "pointer",
-    fontFamily: "inherit",
-    transition: "color 0.2s, border-color 0.2s",
-    letterSpacing: "0.2px",
-  },
-  content: {
-    maxWidth: "900px",
-    margin: "0 auto",
-    padding: "28px 24px 48px",
-  },
-  ticketList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
-  },
-  empty: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    padding: "72px 0",
-    gap: "10px",
-  },
-  emptyIcon: { fontSize: "48px" },
-  emptyTitle: {
-    fontSize: "18px",
-    fontWeight: "700",
-    color: "#1a1a2e",
-    margin: 0,
-    textTransform: "capitalize",
-  },
-  emptySub: {
-    fontSize: "14px",
-    color: "#9e9e9e",
-    margin: 0,
-    textAlign: "center",
-    maxWidth: "300px",
-  },
-  errorText: {
-    fontSize: "14px",
-    color: "#e53935",
-    margin: 0,
-    textAlign: "center",
-    maxWidth: "360px",
-  },
-};

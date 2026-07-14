@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import { getHomeRoute } from "../utils/routes";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -34,9 +35,9 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      await register(name, email, password);
+      const session = await register(name, email, password);
       toast.success("Account created! Welcome to TicketMandu 🎫");
-      navigate("/");
+      navigate(getHomeRoute(session?.user?.role));
     } catch (err) {
       toast.error(err.message || "Registration failed. Please try again.");
     } finally {

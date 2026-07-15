@@ -83,10 +83,7 @@ export default function EventCard({ event }) {
           >
             {event.category}
           </span>
-          <button
-            style={styles.bookBtn}
-            onClick={handleBook}
-          >
+          <button style={styles.bookBtn} onClick={handleBook}>
             Get Tickets
           </button>
         </div>
@@ -118,11 +115,11 @@ const styles = {
     display: "flex",
     alignItems: "flex-start",
     gap: "14px",
-    background: "#ffffff",
+    background: "var(--card-bg)",
     borderRadius: "14px",
     padding: "16px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.07)",
-    border: "1px solid #edf0f7",
+    boxShadow: "var(--shadow-sm)",
+    border: "1px solid var(--border-color)",
     transition: "box-shadow 0.2s, transform 0.15s",
     cursor: "pointer",
     position: "relative",
@@ -148,7 +145,7 @@ const styles = {
   name: {
     fontSize: "15px",
     fontWeight: "600",
-    color: "#1a1a2e",
+    color: "var(--text-primary)",
     lineHeight: "1.3",
     margin: 0,
     whiteSpace: "nowrap",
@@ -156,7 +153,7 @@ const styles = {
     textOverflow: "ellipsis",
   },
   metaRow: { display: "flex", alignItems: "center", gap: "5px" },
-  metaText: { fontSize: "12.5px", color: "#9e9e9e" },
+  metaText: { fontSize: "12.5px", color: "var(--text-muted)" },
   venue: {
     whiteSpace: "nowrap",
     overflow: "hidden",
@@ -170,7 +167,7 @@ const styles = {
     marginTop: "2px",
     flexWrap: "wrap",
   },
-  price: { fontSize: "14px", fontWeight: "700", color: "#1565c0" },
+  price: { fontSize: "14px", fontWeight: "700", color: "var(--blue-btn)" },
   chip: {
     fontSize: "11px",
     fontWeight: "600",
@@ -182,7 +179,7 @@ const styles = {
     fontWeight: "700",
     padding: "4px 12px",
     borderRadius: "9999px",
-    background: "#1565c0",
+    background: "var(--blue-btn)",
     color: "#ffffff",
     border: "none",
     cursor: "pointer",

@@ -8,6 +8,7 @@ export { reviewsAPI } from "./reviews.api";
 export { notificationsAPI } from "./notifications.api";
 export { ticketTypesAPI } from "./ticketTypes.api";
 export { ticketsAPI } from "./tickets.api";
+export { usersAPI } from "./users.api";
 export { resourcesAPI } from "./resources.api";
 export {
   unwrapData,

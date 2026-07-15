@@ -1,48 +1,124 @@
-'use strict';
+"use strict";
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const userController = require('../controllers/user.controller');
-const dashboardController = require('../controllers/dashboard.controller');
-const { authenticate } = require('../middleware/auth.middleware');
-const { requireAdmin } = require('../middleware/rbac.middleware');
-const { validate } = require('../middleware/validate.middleware');
-const { upload } = require('../middleware/upload.middleware');
-const { updateProfileSchema, adminUserSchema } = require('../validators/user.validator');
+const userController = require("../controllers/user.controller");
+const dashboardController = require("../controllers/dashboard.controller");
+const { authenticate } = require("../middleware/auth.middleware");
+const { requireAdmin } = require("../middleware/rbac.middleware");
+const { validate } = require("../middleware/validate.middleware");
+const { upload } = require("../middleware/upload.middleware");
+const {
+  updateProfileSchema,
+  passwordSchema,
+  preferencesSchema,
+  locationSchema,
+  paymentMethodSchema,
+  adminUserSchema,
+} = require("../validators/user.validator");
 
-// GET /api/users/dashboard — get own customer dashboard
-router.get('/dashboard', authenticate, dashboardController.user);
-
-// GET /api/users/me — get own profile
-router.get('/me', authenticate, userController.getMe);
-
-// PUT /api/users/me — update own profile (with optional avatar upload)
+router.get("/dashboard", authenticate, dashboardController.user);
+router.get("/me", authenticate, userController.getMe);
+router.get("/me/stats", authenticate, userController.getStats);
 router.put(
-  '/me',
+  "/me",
   authenticate,
-  upload.single('image'),
+  upload.single("image"),
   validate(updateProfileSchema),
-  userController.updateMe
+  userController.updateMe,
+);
+router.patch(
+  "/me/password",
+  authenticate,
+  validate(passwordSchema),
+  userController.changePassword,
 );
 
-// Admin-only routes
-// GET /api/users — list all users (admin)
-router.get('/', authenticate, requireAdmin, userController.listUsers);
+router.get("/me/preferences", authenticate, userController.getPreferences);
+router.patch(
+  "/me/preferences",
+  authenticate,
+  validate(preferencesSchema),
+  userController.updatePreferences,
+);
 
-// POST /api/users — create user (admin)
-router.post('/', authenticate, requireAdmin, validate(adminUserSchema), userController.createUser);
+router.get("/me/locations", authenticate, userController.listLocations);
+router.post(
+  "/me/locations",
+  authenticate,
+  validate(locationSchema),
+  userController.createLocation,
+);
+router.patch(
+  "/me/locations/:id",
+  authenticate,
+  validate(locationSchema.partial()),
+  userController.updateLocation,
+);
+router.delete("/me/locations/:id", authenticate, userController.deleteLocation);
+router.patch(
+  "/me/locations/:id/default",
+  authenticate,
+  userController.setDefaultLocation,
+);
 
-// PUT /api/users/:id — update user (admin)
-router.put('/:id', authenticate, requireAdmin, validate(adminUserSchema.partial()), userController.updateUser);
+router.get(
+  "/me/payment-methods",
+  authenticate,
+  userController.listPaymentMethods,
+);
+router.post(
+  "/me/payment-methods",
+  authenticate,
+  validate(paymentMethodSchema),
+  userController.createPaymentMethod,
+);
+router.patch(
+  "/me/payment-methods/:id",
+  authenticate,
+  validate(paymentMethodSchema.partial()),
+  userController.updatePaymentMethod,
+);
+router.delete(
+  "/me/payment-methods/:id",
+  authenticate,
+  userController.deletePaymentMethod,
+);
+router.patch(
+  "/me/payment-methods/:id/default",
+  authenticate,
+  userController.setDefaultPaymentMethod,
+);
 
-// PATCH /api/users/:id — update user (admin)
-router.patch('/:id', authenticate, requireAdmin, validate(adminUserSchema.partial()), userController.updateUser);
-
-// PATCH /api/users/:id/status — activate/deactivate user (admin)
-router.patch('/:id/status', authenticate, requireAdmin, userController.setUserStatus);
-
-// DELETE /api/users/:id — delete user (admin)
-router.delete('/:id', authenticate, requireAdmin, userController.deleteUser);
+router.get("/", authenticate, requireAdmin, userController.listUsers);
+router.post(
+  "/",
+  authenticate,
+  requireAdmin,
+  validate(adminUserSchema),
+  userController.createUser,
+);
+router.put(
+  "/:id",
+  authenticate,
+  requireAdmin,
+  validate(adminUserSchema.partial()),
+  userController.updateUser,
+);
+router.patch(
+  "/:id",
+  authenticate,
+  requireAdmin,
+  validate(adminUserSchema.partial()),
+  userController.updateUser,
+);
+router.patch(
+  "/:id/status",
+  authenticate,
+  requireAdmin,
+  userController.setUserStatus,
+);
+router.delete("/:id", authenticate, requireAdmin, userController.deleteUser);
 
 module.exports = router;

@@ -38,10 +38,10 @@ const organizerDashboard = async (organizerUserId) => {
   const stats = await one(
     `
     SELECT
-      (SELECT COUNT(*)::int FROM events e WHERE e.deleted_at IS NULL AND e.organizer_id = $1) AS my_events,
-      (SELECT COUNT(*)::int FROM tickets t JOIN events e ON e.id = t.event_id WHERE t.deleted_at IS NULL AND e.organizer_id = $1) AS tickets_sold,
-      (SELECT COALESCE(SUM(oi.subtotal),0)::numeric FROM order_items oi JOIN orders o ON o.id = oi.order_id JOIN events e ON e.id = oi.event_id WHERE o.status = 'confirmed' AND e.organizer_id = $1) AS revenue,
-      (SELECT COUNT(*)::int FROM tickets t JOIN events e ON e.id = t.event_id WHERE t.status = 'used' AND e.organizer_id = $1) AS check_ins
+      (SELECT COUNT(*)::int FROM events e WHERE e.deleted_at IS NULL AND e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL)) AS my_events,
+      (SELECT COUNT(*)::int FROM tickets t JOIN events e ON e.id = t.event_id WHERE t.deleted_at IS NULL AND e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL)) AS tickets_sold,
+      (SELECT COALESCE(SUM(oi.subtotal),0)::numeric FROM order_items oi JOIN orders o ON o.id = oi.order_id JOIN events e ON e.id = oi.event_id WHERE o.status = 'confirmed' AND e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL)) AS revenue,
+      (SELECT COUNT(*)::int FROM tickets t JOIN events e ON e.id = t.event_id WHERE t.status = 'used' AND e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL)) AS check_ins
   `,
     [organizerUserId],
   );
@@ -50,14 +50,14 @@ const organizerDashboard = async (organizerUserId) => {
     SELECT DISTINCT o.* FROM orders o
     JOIN order_items oi ON oi.order_id = o.id
     JOIN events e ON e.id = oi.event_id
-    WHERE e.organizer_id = $1 AND o.deleted_at IS NULL
+    WHERE e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL) AND o.deleted_at IS NULL
     ORDER BY o.created_at DESC LIMIT 8
   `,
     [organizerUserId],
   );
   const { rows: upcomingEvents } = await db.query(
     `
-    SELECT e.* FROM events e WHERE e.organizer_id = $1 AND e.deleted_at IS NULL ORDER BY COALESCE(e.starts_at, e.created_at) ASC LIMIT 8
+    SELECT e.* FROM events e WHERE e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL) AND e.deleted_at IS NULL ORDER BY COALESCE(e.starts_at, e.created_at) ASC LIMIT 8
   `,
     [organizerUserId],
   );

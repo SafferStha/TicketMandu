@@ -13,6 +13,28 @@ import { formatPrice, formatDateTime } from "../utils/format.util";
 const payableStatuses = new Set(["pending"]);
 const completeStatuses = new Set(["confirmed", "paid"]);
 const blockedStatuses = new Set(["cancelled", "expired", "refunded"]);
+const paymentOptions = [
+  {
+    value: "mock",
+    label: "Mock Payment",
+    note: "Instant safe demo payment for testing.",
+  },
+  {
+    value: "cod",
+    label: "Cash on Delivery",
+    note: "Pay at venue/check-in where supported.",
+  },
+  {
+    value: "esewa_placeholder",
+    label: "eSewa placeholder",
+    note: "Placeholder only — no real eSewa charge is made.",
+  },
+  {
+    value: "khalti_placeholder",
+    label: "Khalti placeholder",
+    note: "Placeholder only — no real Khalti charge is made.",
+  },
+];
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
@@ -23,6 +45,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(!location.state?.order);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("mock");
 
   const loadOrder = async () => {
     if (!orderId) return;
@@ -61,7 +84,7 @@ export default function CheckoutPage() {
     if (!canPay) return;
     setProcessing(true);
     try {
-      await paymentsAPI.mockPay(order.id);
+      await paymentsAPI.mockPay(order.id, paymentMethod);
       toast.success("Payment successful. Your tickets are ready.");
       navigate("/tickets");
     } catch (err) {
@@ -105,7 +128,7 @@ export default function CheckoutPage() {
       <div className="tm-container">
         <PageHeader
           title="Checkout"
-          subtitle="Review your order and complete the secure mock payment."
+          subtitle="Review your order and complete a safe demo payment. Placeholder wallets do not process real charges."
         />
         <div className="flow-grid">
           <section className="tm-card flow-card">
@@ -173,9 +196,42 @@ export default function CheckoutPage() {
               </p>
             ) : null}
             {!alreadyPaid && !blocked ? (
-              <button className="tm-btn" disabled={!canPay} onClick={handlePay}>
-                {processing ? "Processing…" : "Pay with Mock Gateway"}
-              </button>
+              <>
+                <div
+                  className="payment-options"
+                  role="radiogroup"
+                  aria-label="Payment method"
+                >
+                  {paymentOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`payment-option ${paymentMethod === option.value ? "selected" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={option.value}
+                        checked={paymentMethod === option.value}
+                        onChange={() => setPaymentMethod(option.value)}
+                        disabled={processing}
+                      />
+                      <span>
+                        <strong>{option.label}</strong>
+                        <small>{option.note}</small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <button
+                  className="tm-btn"
+                  disabled={!canPay}
+                  onClick={handlePay}
+                >
+                  {processing
+                    ? "Processing…"
+                    : `Pay with ${paymentOptions.find((o) => o.value === paymentMethod)?.label || "selected method"}`}
+                </button>
+              </>
             ) : null}
             <Link to={`/orders/${order.id}`} className="tm-btn-secondary">
               View order details

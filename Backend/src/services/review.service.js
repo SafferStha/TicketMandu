@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const reviewRepo = require('../repositories/review.repository');
-const orderRepo = require('../repositories/order.repository');
-const { paginate } = require('../utils/paginate.util');
+const reviewRepo = require("../repositories/review.repository");
+const orderRepo = require("../repositories/order.repository");
+const { paginate } = require("../utils/paginate.util");
 
 const createAppError = (message, statusCode, code) => {
   const err = new Error(message);
@@ -27,14 +27,18 @@ const listReviews = async (actor, query = {}) => {
   const params = [];
   let idx = 1;
 
-  if (actor?.role === 'organizer') {
-    where.push(`e.organizer_id = $${idx}`);
+  if (actor?.role === "organizer") {
+    where.push(
+      `e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $${idx} AND deleted_at IS NULL)`,
+    );
     params.push(actor.id);
     idx += 1;
   }
 
   if (query.q) {
-    where.push(`(LOWER(COALESCE(r.body, '')) LIKE $${idx} OR LOWER(e.name) LIKE $${idx})`);
+    where.push(
+      `(LOWER(COALESCE(r.body, '')) LIKE $${idx} OR LOWER(e.name) LIKE $${idx})`,
+    );
     params.push(`%${String(query.q).toLowerCase()}%`);
     idx += 1;
   }
@@ -44,13 +48,23 @@ const listReviews = async (actor, query = {}) => {
     params.push(query.eventId);
   }
 
-  const result = await reviewRepo.listAll({ where: where.length ? where.join(' AND ') : '1=1', params, limit, offset });
+  const result = await reviewRepo.listAll({
+    where: where.length ? where.join(" AND ") : "1=1",
+    params,
+    limit,
+    offset,
+  });
   return { reviews: result.reviews, pagination: buildMeta(result.total) };
 };
 
 const createReview = async (userId, data) => {
   const eligible = await canReviewEvent(userId, data.eventId);
-  if (!eligible) throw createAppError('You can only review events you booked', 403, 'NOT_ELIGIBLE');
+  if (!eligible)
+    throw createAppError(
+      "You can only review events you booked",
+      403,
+      "NOT_ELIGIBLE",
+    );
   return reviewRepo.create({ userId, ...data });
 };
 
@@ -59,8 +73,17 @@ const listEventReviews = async (eventId) => ({
   summary: await reviewRepo.getSummary(eventId),
 });
 
-const updateReview = async (userId, id, data, isAdmin = false) => reviewRepo.update(id, userId, data, isAdmin);
-const deleteReview = async (userId, id, isAdmin = false) => reviewRepo.remove(id, userId, isAdmin);
+const updateReview = async (userId, id, data, isAdmin = false) =>
+  reviewRepo.update(id, userId, data, isAdmin);
+const deleteReview = async (userId, id, isAdmin = false) =>
+  reviewRepo.remove(id, userId, isAdmin);
 const setStatus = async (id, visible) => reviewRepo.hide(id, visible);
 
-module.exports = { listReviews, createReview, listEventReviews, updateReview, deleteReview, setStatus };
+module.exports = {
+  listReviews,
+  createReview,
+  listEventReviews,
+  updateReview,
+  deleteReview,
+  setStatus,
+};

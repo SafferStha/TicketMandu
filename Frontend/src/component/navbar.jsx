@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { getInitials } from "../utils/format.util";
 
 const HomeIcon = () => <span aria-hidden="true">⌂</span>;
@@ -21,17 +22,20 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { theme, effectiveTheme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const closeMenu = () => setOpen(false);
 
-  const handleSignOut = async () => {
-    closeMenu();
-    await logout();
-    navigate("/login");
+  const cycleTheme = async () => {
+    const next =
+      theme === "system" ? "light" : theme === "light" ? "dark" : "system";
+    await setTheme(next);
   };
+
+  const themeLabel = theme === "system" ? `System (${effectiveTheme})` : theme;
 
   return (
     <header className="tm-navbar">
@@ -82,11 +86,11 @@ export default function Navbar() {
           <button
             type="button"
             className="tm-icon-btn"
-            onClick={handleSignOut}
-            title="Sign out"
-            aria-label="Sign out"
+            onClick={cycleTheme}
+            title={`Theme: ${themeLabel}`}
+            aria-label={`Theme: ${themeLabel}`}
           >
-            ⎋
+            {theme === "system" ? "◐" : theme === "dark" ? "☾" : "☀"}
           </button>
           <button
             type="button"

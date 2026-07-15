@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./component/navbar";
 import HomePage from "./pages/HomePage";
@@ -28,7 +29,15 @@ function AppLayout() {
 
   if (hydrating) {
     return (
-      <div className="app-layout" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        className="app-layout"
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <p style={{ color: "#9e9e9e" }}>Loading…</p>
       </div>
     );
@@ -375,7 +384,12 @@ function AppLayout() {
 
           <Route
             path="*"
-            element={<Navigate to={user ? getHomeRoute(user.role) : "/login"} replace />}
+            element={
+              <Navigate
+                to={user ? getHomeRoute(user.role) : "/login"}
+                replace
+              />
+            }
           />
         </Routes>
       </main>
@@ -385,13 +399,15 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
       <AuthProvider>
-        <ErrorBoundary>
-          <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
-          <AppLayout />
-        </ErrorBoundary>
+        <ThemeProvider>
+          <BrowserRouter>
+            <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
+            <AppLayout />
+          </BrowserRouter>
+        </ThemeProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </ErrorBoundary>
   );
 }

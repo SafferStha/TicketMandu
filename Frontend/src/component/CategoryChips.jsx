@@ -1,7 +1,7 @@
 export default function CategoryChips({ categories, selected, onSelect }) {
   return (
     <div style={styles.wrapper}>
-      {categories.map(cat => {
+      {categories.map((cat) => {
         const isSelected = selected === cat.id;
         return (
           <button
@@ -9,10 +9,12 @@ export default function CategoryChips({ categories, selected, onSelect }) {
             onClick={() => onSelect(cat.id)}
             style={{
               ...styles.chip,
-              background: isSelected ? '#1565c0' : '#ffffff',
-              color: isSelected ? '#ffffff' : '#1565c0',
-              border: isSelected ? '2px solid #1565c0' : '2px solid #1565c0',
-              boxShadow: isSelected ? '0 2px 8px rgba(21,101,192,0.3)' : 'none',
+              background: isSelected ? "var(--blue-btn)" : "var(--card-bg)",
+              color: isSelected ? "#ffffff" : "var(--blue-btn)",
+              border: isSelected
+                ? "2px solid var(--blue-btn)"
+                : "2px solid color-mix(in srgb, var(--blue-btn) 55%, var(--border-color))",
+              boxShadow: isSelected ? "0 2px 8px rgba(21,101,192,0.3)" : "none",
             }}
           >
             <span style={styles.icon}>{cat.icon}</span>
@@ -26,29 +28,24 @@ export default function CategoryChips({ categories, selected, onSelect }) {
 
 const styles = {
   wrapper: {
-    display: 'flex',
-    gap: '10px',
-    flexWrap: 'wrap',
-    padding: '4px 0',
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+    padding: "4px 0",
   },
   chip: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 16px',
-    borderRadius: '9999px',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontFamily: 'inherit',
-    whiteSpace: 'nowrap',
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "8px 16px",
+    borderRadius: "9999px",
+    fontSize: "13px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap",
   },
-  icon: {
-    fontSize: '15px',
-    lineHeight: 1,
-  },
-  label: {
-    lineHeight: 1,
-  },
+  icon: { fontSize: "15px", lineHeight: 1 },
+  label: { lineHeight: 1 },
 };

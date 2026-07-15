@@ -60,8 +60,8 @@ const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use("/uploads", express.static(uploadsDir));
 
-// Global rate limiter (before routes)
-app.use("/api", generalLimiter);
+// No global API limiter: normal CRUD/profile/booking/dashboard usage should not
+// lock users out. Auth/security-sensitive routes attach dedicated limiters.
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 // New clean-architecture routes under /api
@@ -125,29 +125,11 @@ const bootstrapDatabase = async () => {
       id         SERIAL       PRIMARY KEY,
       user_id    INTEGER      NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
       event_id   INTEGER      NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-      status     VARCHAR(20)  NOT NULL DEFAULT 'active',
+      status     VARCHAR(20)  NOT NULL DEFAULT 'upcoming',
       seat       VARCHAR(255) NOT NULL DEFAULT 'General Admission',
       created_at TIMESTAMP    NOT NULL DEFAULT NOW()
     )
   `);
-
-  await db
-    .query(`UPDATE tickets SET status = 'active' WHERE status IS NULL OR status IN ('upcoming', 'past')`)
-    .catch(() => {});
-  await db
-    .query(`ALTER TABLE tickets ALTER COLUMN status SET DEFAULT 'active'`)
-    .catch(() => {});
-  await db
-    .query(`ALTER TABLE tickets ALTER COLUMN status SET NOT NULL`)
-    .catch(() => {});
-  await db
-    .query(`ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_status_check`)
-    .catch(() => {});
-  await db
-    .query(
-      `ALTER TABLE tickets ADD CONSTRAINT tickets_status_check CHECK (status IN ('active', 'used', 'cancelled', 'refunded'))`,
-    )
-    .catch(() => {});
 
   // Refresh tokens table (Phase 4 auth improvements)
   await db.query(`
@@ -163,6 +145,14 @@ const bootstrapDatabase = async () => {
   `);
 
   // Additive schema upgrades for the business-ready ticketing model.
+  await db
+    .query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(60)`)
+    .catch(() => {});
+  await db
+    .query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique ON users (LOWER(username)) WHERE username IS NOT NULL`,
+    )
+    .catch(() => {});
   await db
     .query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)`)
     .catch(() => {});
@@ -448,6 +438,54 @@ const bootstrapDatabase = async () => {
   `);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      email_notifications BOOLEAN NOT NULL DEFAULT true,
+      booking_notifications BOOLEAN NOT NULL DEFAULT true,
+      payment_notifications BOOLEAN NOT NULL DEFAULT true,
+      ticket_notifications BOOLEAN NOT NULL DEFAULT true,
+      event_reminders BOOLEAN NOT NULL DEFAULT true,
+      promotional_notifications BOOLEAN NOT NULL DEFAULT false,
+      in_app_toasts BOOLEAN NOT NULL DEFAULT true,
+      theme VARCHAR(20) NOT NULL DEFAULT 'system',
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_locations (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      label VARCHAR(80) NOT NULL,
+      city VARCHAR(100) NOT NULL,
+      area VARCHAR(120),
+      address VARCHAR(255) NOT NULL,
+      latitude NUMERIC(10,7),
+      longitude NUMERIC(10,7),
+      is_default BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_payment_methods (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      method_type VARCHAR(30) NOT NULL,
+      provider VARCHAR(80),
+      label VARCHAR(100) NOT NULL,
+      last4 VARCHAR(4),
+      is_default BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP
+    )
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id BIGSERIAL PRIMARY KEY,
       actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -640,11 +678,11 @@ const bootstrapDatabase = async () => {
   const demoPasswordHash = await hashPassword("Demo@1234");
   await db
     .query(
-      `INSERT INTO users (name, email, password, role, is_active)
+      `INSERT INTO users (name, username, email, password, role, is_active)
      VALUES
-       ('TicketMandu Admin', 'admin@ticketmandu.com', $1, 'admin', true),
-       ('TicketMandu Organizer', 'organizer@ticketmandu.com', $1, 'organizer', true),
-       ('TicketMandu User', 'user@ticketmandu.com', $1, 'user', true)
+       ('TicketMandu Admin', 'admin', 'admin@ticketmandu.com', $1, 'admin', true),
+       ('TicketMandu Organizer', 'organizer', 'organizer@ticketmandu.com', $1, 'organizer', true),
+       ('TicketMandu User', 'demo_user', 'user@ticketmandu.com', $1, 'user', true)
      ON CONFLICT (email) DO NOTHING`,
       [demoPasswordHash],
     )
@@ -678,13 +716,14 @@ const bootstrapDatabase = async () => {
     .query(
       `
     UPDATE events e
-    SET organizer_id = u.id,
+    SET organizer_id = o.id,
         description = COALESCE(e.description, 'A premium live event experience curated by TicketMandu with secure booking, digital tickets, and fast entry.'),
         status = COALESCE(e.status, 'published'),
         total_capacity = COALESCE(e.total_capacity, 1000)
-    FROM users u
+    FROM organizers o
+    JOIN users u ON u.id = o.user_id
     WHERE u.email = 'organizer@ticketmandu.com'
-      AND (e.organizer_id IS NULL OR e.organizer_id IN (SELECT id FROM organizers WHERE slug = 'ticketmandu-live'))
+      AND (e.organizer_id IS NULL OR e.organizer_id = u.id OR e.organizer_id IN (SELECT id FROM organizers WHERE slug = 'ticketmandu-live'))
   `,
     )
     .catch(() => {});

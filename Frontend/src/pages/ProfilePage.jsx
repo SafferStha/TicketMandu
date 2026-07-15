@@ -1,36 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { ticketsAPI, getErrorMessage } from "../api";
 import toast from "react-hot-toast";
+import { authAPI, usersAPI, getErrorMessage } from "../api";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import ConfirmModal from "../components/ConfirmModal";
+import { formatPrice } from "../utils/format.util";
 
-const settingsItems = [
-  {
-    icon: "👤",
-    label: "Personal Information",
-    sub: "Update your profile details",
-  },
-  { icon: "🔔", label: "Notifications", sub: "Manage your alert preferences" },
-  {
-    icon: "💳",
-    label: "Payment Methods",
-    sub: "Add or remove payment options",
-  },
-  { icon: "📍", label: "Saved Locations", sub: "Manage your favourite venues" },
-  {
-    icon: "🔒",
-    label: "Security & Privacy",
-    sub: "Password and security settings",
-  },
-  { icon: "⚙️", label: "App Preferences", sub: "Language, theme and more" },
-  { icon: "❓", label: "Help & Support", sub: "Get help and contact support" },
+const tabs = [
+  ["overview", "Overview"],
+  ["profile", "Edit Profile"],
+  ["security", "Security"],
+  ["locations", "Saved Locations"],
+  ["payments", "Payment Methods"],
+  ["preferences", "Notifications & App"],
 ];
 
-const ChevronIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="#c0c0c0">
-    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-  </svg>
-);
+const emptyLocation = {
+  label: "",
+  city: "",
+  area: "",
+  address: "",
+  is_default: false,
+};
+const emptyPayment = {
+  method_type: "mock",
+  provider: "",
+  label: "",
+  last4: "",
+  is_default: false,
+};
+const methodLabels = {
+  mock: "Mock Payment",
+  cod: "Cash on Delivery",
+  esewa_placeholder: "eSewa placeholder",
+  khalti_placeholder: "Khalti placeholder",
+};
 
 const getInitials = (name) =>
   name
@@ -43,237 +48,641 @@ const getInitials = (name) =>
     : "?";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    ticketsCount: 0,
-    eventsCount: 0,
-    favoritesCount: 0,
-    upcomingCount: 0,
-    pastCount: 0,
+  const [active, setActive] = useState("overview");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [preferences, setPreferences] = useState(null);
+  const [locations, setLocations] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || "",
+    username: user?.username || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
   });
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState(null);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [locationForm, setLocationForm] = useState(emptyLocation);
+  const [editingLocationId, setEditingLocationId] = useState(null);
+  const [paymentForm, setPaymentForm] = useState(emptyPayment);
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+
+  const loadAccount = async () => {
+    setLoading(true);
+    try {
+      const [statsData, prefData, locData, methodData] = await Promise.all([
+        usersAPI.getStats(),
+        usersAPI.getPreferences(),
+        usersAPI.getLocations(),
+        usersAPI.getPaymentMethods(),
+      ]);
+      setStats(statsData);
+      setPreferences(prefData);
+      setLocations(locData);
+      setPaymentMethods(methodData);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to load account settings"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    ticketsAPI
-      .getStats()
-      .then((stats) => setStats((current) => ({ ...current, ...stats })))
-      .catch((err) =>
-        setStatsError(getErrorMessage(err, "Failed to load stats")),
-      )
-      .finally(() => setStatsLoading(false));
+    loadAccount();
   }, []);
 
-  const handleSignOut = () => {
-    logout();
+  useEffect(() => {
+    setProfileForm({
+      name: user?.name || "",
+      username: user?.username || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    });
+  }, [user]);
+
+  const joinedDate = useMemo(() => user?.created_at || user?.createdAt, [user]);
+
+  const handleSignOut = async () => {
+    await logout();
     toast.success("Signed out successfully");
     navigate("/login");
   };
 
-  const handleSettingClick = () => {
-    toast("Coming soon!", { icon: "🚧" });
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updated = await authAPI.updateProfile(profileForm);
+      updateUser(updated);
+      toast.success("Profile updated");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update profile"));
+    } finally {
+      setSaving(false);
+    }
   };
 
+  const changePassword = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword)
+      return toast.error("New passwords do not match");
+    setSaving(true);
+    try {
+      await usersAPI.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      toast.success("Password changed securely");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to change password"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const savePreferences = async (patch) => {
+    const previous = preferences;
+    const next = { ...preferences, ...patch };
+    setPreferences(next);
+    try {
+      const updated = await usersAPI.updatePreferences(patch);
+      setPreferences(updated);
+      if (patch.theme) await setTheme(patch.theme, { persist: false });
+      if (next.in_app_toasts) toast.success("Preference saved");
+    } catch (err) {
+      setPreferences(previous);
+      toast.error(getErrorMessage(err, "Failed to save preference"));
+    }
+  };
+
+  const saveLocation = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editingLocationId)
+        await usersAPI.updateLocation(editingLocationId, locationForm);
+      else await usersAPI.createLocation(locationForm);
+      setLocationForm(emptyLocation);
+      setEditingLocationId(null);
+      await loadAccount();
+      toast.success("Location saved");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to save location"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteLocation = (id) => {
+    setConfirmAction({
+      title: "Delete saved location?",
+      message: "This location will be removed from your account.",
+      confirmLabel: "Delete location",
+      action: async () => {
+        await usersAPI.deleteLocation(id);
+        await loadAccount();
+        toast.success("Location deleted");
+      },
+    });
+  };
+
+  const savePayment = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload = {
+        ...paymentForm,
+        label: paymentForm.label || methodLabels[paymentForm.method_type],
+      };
+      if (editingPaymentId)
+        await usersAPI.updatePaymentMethod(editingPaymentId, payload);
+      else await usersAPI.createPaymentMethod(payload);
+      setPaymentForm(emptyPayment);
+      setEditingPaymentId(null);
+      await loadAccount();
+      toast.success("Payment method saved");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to save payment method"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deletePayment = (id) => {
+    setConfirmAction({
+      title: "Delete payment method?",
+      message:
+        "This safe demo payment method will be removed from your profile.",
+      confirmLabel: "Delete method",
+      action: async () => {
+        await usersAPI.deletePaymentMethod(id);
+        await loadAccount();
+        toast.success("Payment method deleted");
+      },
+    });
+  };
+
+  const statCards = [
+    ["Total orders", stats?.totalOrders],
+    ["Total tickets", stats?.totalTickets],
+    ["Upcoming tickets", stats?.upcomingTickets],
+    ["Used/completed", stats?.usedCompletedTickets],
+    ["Favorite events", stats?.favoriteEvents],
+    ["Reviews written", stats?.reviewsWritten],
+    ["Unread notifications", stats?.unreadNotifications],
+    ["Total spent", formatPrice(stats?.totalAmountSpent || 0, "NPR")],
+    ["Pending orders", stats?.pendingOrders],
+    ["Cancelled orders", stats?.cancelledOrders],
+  ];
+
   return (
-    <div style={styles.page}>
-      {/* Profile Hero */}
-      <div style={styles.hero}>
-        <div style={styles.heroInner}>
-          <div style={styles.avatarCircle}>{getInitials(user?.name)}</div>
-          <h1 style={styles.name}>{user?.name}</h1>
-          <p style={styles.email}>{user?.email}</p>
-
-          {/* Stats */}
-          <div style={styles.statsRow}>
-            <div style={styles.stat}>
-              <span style={styles.statNum}>
-                {statsLoading ? "…" : stats.eventsCount}
-              </span>
-              <span style={styles.statLabel}>Events</span>
-            </div>
-            <div style={styles.statDivider} />
-            <div style={styles.stat}>
-              <span style={styles.statNum}>
-                {statsLoading ? "…" : stats.ticketsCount}
-              </span>
-              <span style={styles.statLabel}>Tickets</span>
-            </div>
-            <div style={styles.statDivider} />
-            <div style={styles.stat}>
-              <span style={styles.statNum}>
-                {statsLoading ? "…" : stats.favoritesCount}
-              </span>
-              <span style={styles.statLabel}>Favorites</span>
-            </div>
-          </div>
-          {statsError && <p style={styles.statsError}>{statsError}</p>}
+    <div className="profile-page">
+      <section className="profile-hero">
+        <div className="profile-avatar">
+          {user?.image ? (
+            <img src={`/uploads/${user.image}`} alt="Profile" />
+          ) : (
+            getInitials(user?.name)
+          )}
         </div>
-      </div>
+        <div>
+          <h1>{user?.name}</h1>
+          <p>
+            @{user?.username || "set-a-username"} · {user?.email}
+          </p>
+          <span className="tm-badge published">{user?.role}</span>
+          <span className="tm-badge confirmed">
+            {user?.is_active === false ? "inactive" : "active"}
+          </span>
+        </div>
+      </section>
 
-      {/* Settings */}
-      <div style={styles.content}>
-        <div style={styles.card}>
-          <p style={styles.settingsLabel}>SETTINGS</p>
-          {settingsItems.map((item, i) => (
+      <div className="profile-shell">
+        <nav className="profile-tabs" aria-label="Profile sections">
+          {tabs.map(([key, label]) => (
             <button
-              key={i}
-              style={{
-                ...styles.settingRow,
-                borderBottom:
-                  i < settingsItems.length - 1 ? "1px solid #f0f2f8" : "none",
-              }}
-              onClick={handleSettingClick}
+              key={key}
+              className={active === key ? "active" : ""}
+              onClick={() => setActive(key)}
             >
-              <div style={styles.settingIcon}>{item.icon}</div>
-              <div style={styles.settingText}>
-                <span style={styles.settingLabel}>{item.label}</span>
-                <span style={styles.settingSub}>{item.sub}</span>
-              </div>
-              <ChevronIcon />
+              {label}
             </button>
           ))}
-        </div>
+          <button className="danger" onClick={handleSignOut}>
+            Sign out
+          </button>
+        </nav>
 
-        <button style={styles.signOutBtn} onClick={handleSignOut}>
-          Sign Out
-        </button>
+        <section className="profile-panel tm-card">
+          {loading ? (
+            <div className="tm-empty">
+              <h3>Loading account…</h3>
+            </div>
+          ) : null}
+
+          {!loading && active === "overview" && (
+            <>
+              <h2>Account overview</h2>
+              <div className="profile-grid two">
+                <Info label="Full name" value={user?.name} />
+                <Info label="Username" value={user?.username || "Not set"} />
+                <Info label="Email" value={user?.email} />
+                <Info label="Phone" value={user?.phone || "Not set"} />
+                <Info label="Role" value={user?.role} />
+                <Info
+                  label="Joined"
+                  value={
+                    joinedDate
+                      ? new Date(joinedDate).toLocaleDateString()
+                      : "Unknown"
+                  }
+                />
+              </div>
+              <h2 style={{ marginTop: 28 }}>Statistics</h2>
+              <div className="profile-grid stats">
+                {statCards.map(([label, value]) => (
+                  <Info key={label} label={label} value={value ?? 0} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {!loading && active === "profile" && (
+            <form className="profile-form" onSubmit={saveProfile}>
+              <h2>Edit profile</h2>
+              <Field
+                label="Full name"
+                value={profileForm.name}
+                onChange={(v) => setProfileForm({ ...profileForm, name: v })}
+                required
+              />
+              <Field
+                label="Username"
+                value={profileForm.username}
+                onChange={(v) =>
+                  setProfileForm({ ...profileForm, username: v })
+                }
+                placeholder="letters, numbers, underscores"
+              />
+              <Field
+                label="Email"
+                type="email"
+                value={profileForm.email}
+                onChange={(v) => setProfileForm({ ...profileForm, email: v })}
+                required
+              />
+              <Field
+                label="Phone"
+                value={profileForm.phone}
+                onChange={(v) => setProfileForm({ ...profileForm, phone: v })}
+              />
+              <button className="tm-btn" disabled={saving}>
+                {saving ? "Saving…" : "Save profile"}
+              </button>
+            </form>
+          )}
+
+          {!loading && active === "security" && (
+            <form className="profile-form" onSubmit={changePassword}>
+              <h2>Security</h2>
+              <p className="tm-muted">
+                Password changes require your current password. You will remain
+                signed in.
+              </p>
+              <Field
+                label="Current password"
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(v) =>
+                  setPasswordForm({ ...passwordForm, currentPassword: v })
+                }
+                required
+              />
+              <Field
+                label="New password"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(v) =>
+                  setPasswordForm({ ...passwordForm, newPassword: v })
+                }
+                required
+              />
+              <Field
+                label="Confirm new password"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(v) =>
+                  setPasswordForm({ ...passwordForm, confirmPassword: v })
+                }
+                required
+              />
+              <button className="tm-btn" disabled={saving}>
+                {saving ? "Updating…" : "Change password"}
+              </button>
+            </form>
+          )}
+
+          {!loading && active === "locations" && (
+            <CrudSection
+              title="Saved locations"
+              empty="No saved locations yet."
+            >
+              <form className="profile-form compact" onSubmit={saveLocation}>
+                <Field
+                  label="Label"
+                  value={locationForm.label}
+                  onChange={(v) =>
+                    setLocationForm({ ...locationForm, label: v })
+                  }
+                  required
+                />
+                <Field
+                  label="City"
+                  value={locationForm.city}
+                  onChange={(v) =>
+                    setLocationForm({ ...locationForm, city: v })
+                  }
+                  required
+                />
+                <Field
+                  label="Area"
+                  value={locationForm.area}
+                  onChange={(v) =>
+                    setLocationForm({ ...locationForm, area: v })
+                  }
+                />
+                <Field
+                  label="Address"
+                  value={locationForm.address}
+                  onChange={(v) =>
+                    setLocationForm({ ...locationForm, address: v })
+                  }
+                  required
+                />
+                <Toggle
+                  label="Set as default"
+                  checked={locationForm.is_default}
+                  onChange={(v) =>
+                    setLocationForm({ ...locationForm, is_default: v })
+                  }
+                />
+                <button className="tm-btn" disabled={saving}>
+                  {editingLocationId ? "Update location" : "Add location"}
+                </button>
+              </form>
+              <div className="profile-list">
+                {locations.map((loc) => (
+                  <div className="profile-list-row" key={loc.id}>
+                    <div>
+                      <strong>{loc.label}</strong>
+                      {loc.is_default && (
+                        <span className="tm-badge confirmed">default</span>
+                      )}
+                      <p>
+                        {loc.address}, {loc.area ? `${loc.area}, ` : ""}
+                        {loc.city}
+                      </p>
+                    </div>
+                    <Actions
+                      onEdit={() => {
+                        setEditingLocationId(loc.id);
+                        setLocationForm({
+                          label: loc.label,
+                          city: loc.city,
+                          area: loc.area || "",
+                          address: loc.address,
+                          is_default: loc.is_default,
+                        });
+                      }}
+                      onDefault={() =>
+                        usersAPI.setDefaultLocation(loc.id).then(loadAccount)
+                      }
+                      onDelete={() => deleteLocation(loc.id)}
+                    />
+                  </div>
+                ))}
+                {!locations.length && (
+                  <p className="tm-muted">No saved locations yet.</p>
+                )}
+              </div>
+            </CrudSection>
+          )}
+
+          {!loading && active === "payments" && (
+            <CrudSection
+              title="Payment methods"
+              empty="No payment methods yet."
+            >
+              <p className="tm-muted">
+                Safe demo methods only. TicketMandu never asks for or stores
+                real card numbers here.
+              </p>
+              <form className="profile-form compact" onSubmit={savePayment}>
+                <label>
+                  Method type
+                  <select
+                    value={paymentForm.method_type}
+                    onChange={(e) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        method_type: e.target.value,
+                        label: methodLabels[e.target.value],
+                      })
+                    }
+                  >
+                    {Object.entries(methodLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Field
+                  label="Label"
+                  value={paymentForm.label}
+                  onChange={(v) => setPaymentForm({ ...paymentForm, label: v })}
+                  placeholder={methodLabels[paymentForm.method_type]}
+                />
+                <Field
+                  label="Last 4 (optional demo only)"
+                  value={paymentForm.last4}
+                  onChange={(v) => setPaymentForm({ ...paymentForm, last4: v })}
+                />
+                <Toggle
+                  label="Set as default"
+                  checked={paymentForm.is_default}
+                  onChange={(v) =>
+                    setPaymentForm({ ...paymentForm, is_default: v })
+                  }
+                />
+                <button className="tm-btn" disabled={saving}>
+                  {editingPaymentId ? "Update method" : "Add method"}
+                </button>
+              </form>
+              <div className="profile-list">
+                {paymentMethods.map((m) => (
+                  <div className="profile-list-row" key={m.id}>
+                    <div>
+                      <strong>{m.label}</strong>
+                      {m.is_default && (
+                        <span className="tm-badge confirmed">default</span>
+                      )}
+                      <p>
+                        {methodLabels[m.method_type] || m.method_type}
+                        {m.last4 ? ` · **** ${m.last4}` : ""}
+                      </p>
+                    </div>
+                    <Actions
+                      onEdit={() => {
+                        setEditingPaymentId(m.id);
+                        setPaymentForm({
+                          method_type: m.method_type,
+                          provider: m.provider || "",
+                          label: m.label,
+                          last4: m.last4 || "",
+                          is_default: m.is_default,
+                        });
+                      }}
+                      onDefault={() =>
+                        usersAPI.setDefaultPaymentMethod(m.id).then(loadAccount)
+                      }
+                      onDelete={() => deletePayment(m.id)}
+                    />
+                  </div>
+                ))}
+                {!paymentMethods.length && (
+                  <p className="tm-muted">No payment methods yet.</p>
+                )}
+              </div>
+            </CrudSection>
+          )}
+
+          {!loading && active === "preferences" && preferences && (
+            <div className="profile-form">
+              <h2>Notification settings</h2>
+              {[
+                ["email_notifications", "Email notifications"],
+                ["booking_notifications", "Booking updates"],
+                ["payment_notifications", "Payment notifications"],
+                ["ticket_notifications", "Ticket notifications"],
+                ["event_reminders", "Event reminders"],
+                ["promotional_notifications", "Promotional notifications"],
+                ["in_app_toasts", "Optional in-app success/info toasts"],
+              ].map(([key, label]) => (
+                <Toggle
+                  key={key}
+                  label={label}
+                  checked={!!preferences[key]}
+                  onChange={(v) => savePreferences({ [key]: v })}
+                />
+              ))}
+              <h2>App preferences</h2>
+              <label>
+                Theme
+                <select
+                  value={preferences.theme || theme}
+                  onChange={(e) => savePreferences({ theme: e.target.value })}
+                >
+                  <option value="system">System</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
+            </div>
+          )}
+        </section>
       </div>
+      <ConfirmModal
+        open={!!confirmAction}
+        title={confirmAction?.title}
+        message={confirmAction?.message}
+        confirmLabel={confirmAction?.confirmLabel}
+        destructive
+        loading={saving}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={async () => {
+          if (!confirmAction) return;
+          setSaving(true);
+          try {
+            await confirmAction.action();
+            setConfirmAction(null);
+          } catch (err) {
+            toast.error(getErrorMessage(err, "Action failed"));
+          } finally {
+            setSaving(false);
+          }
+        }}
+      />
     </div>
   );
 }
 
-const styles = {
-  page: { minHeight: "100vh", background: "#f4f6fb" },
-  hero: {
-    background: "linear-gradient(135deg, #0d1b4b 0%, #1a3a6b 100%)",
-    padding: "40px 24px 48px",
-  },
-  heroInner: {
-    maxWidth: "600px",
-    margin: "0 auto",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "10px",
-  },
-  avatarCircle: {
-    width: "80px",
-    height: "80px",
-    borderRadius: "50%",
-    background: "#1976d2",
-    color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "28px",
-    fontWeight: "700",
-    border: "3px solid rgba(255,255,255,0.35)",
-    marginBottom: "4px",
-  },
-  name: { fontSize: "22px", fontWeight: "700", color: "#ffffff", margin: 0 },
-  email: { fontSize: "14px", color: "rgba(255,255,255,0.65)", margin: 0 },
-  statsError: {
-    color: "#ffcdd2",
-    fontSize: "12px",
-    margin: "4px 0 0",
-    textAlign: "center",
-  },
-  statsRow: {
-    display: "flex",
-    alignItems: "center",
-    marginTop: "16px",
-    background: "rgba(255,255,255,0.1)",
-    borderRadius: "14px",
-    padding: "16px 32px",
-    gap: "24px",
-  },
-  stat: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "2px",
-    minWidth: "56px",
-  },
-  statNum: { fontSize: "22px", fontWeight: "700", color: "#ffffff" },
-  statLabel: {
-    fontSize: "12px",
-    color: "rgba(255,255,255,0.65)",
-    fontWeight: "500",
-  },
-  statDivider: {
-    width: "1px",
-    height: "36px",
-    background: "rgba(255,255,255,0.2)",
-  },
-  content: {
-    maxWidth: "700px",
-    margin: "-20px auto 0",
-    padding: "0 24px 48px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    position: "relative",
-    zIndex: 1,
-  },
-  card: {
-    background: "#ffffff",
-    borderRadius: "16px",
-    overflow: "hidden",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-  },
-  settingsLabel: {
-    fontSize: "11.5px",
-    fontWeight: "700",
-    color: "#9e9e9e",
-    letterSpacing: "1px",
-    padding: "16px 20px 8px",
-    margin: 0,
-  },
-  settingRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "14px",
-    padding: "15px 20px",
-    background: "none",
-    border: "none",
-    width: "100%",
-    cursor: "pointer",
-    textAlign: "left",
-    fontFamily: "inherit",
-    transition: "background 0.15s",
-  },
-  settingIcon: {
-    width: "38px",
-    height: "38px",
-    borderRadius: "10px",
-    background: "#f4f6fb",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "18px",
-    flexShrink: 0,
-  },
-  settingText: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: "2px",
-  },
-  settingLabel: { fontSize: "14.5px", fontWeight: "600", color: "#1a1a2e" },
-  settingSub: { fontSize: "12px", color: "#9e9e9e" },
-  signOutBtn: {
-    width: "100%",
-    padding: "14px",
-    background: "#ffffff",
-    color: "#e53935",
-    border: "1.5px solid #ffcdd2",
-    borderRadius: "14px",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-    fontFamily: "inherit",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-    transition: "background 0.2s",
-  },
-};
+function Info({ label, value }) {
+  return (
+    <div className="profile-info">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+function Field({ label, value, onChange, type = "text", ...props }) {
+  return (
+    <label>
+      {label}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        {...props}
+      />
+    </label>
+  );
+}
+function Toggle({ label, checked, onChange }) {
+  return (
+    <label className="profile-toggle">
+      <span>{label}</span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+    </label>
+  );
+}
+function CrudSection({ title, children }) {
+  return (
+    <div>
+      <h2>{title}</h2>
+      {children}
+    </div>
+  );
+}
+function Actions({ onEdit, onDefault, onDelete }) {
+  return (
+    <div className="profile-actions">
+      <button className="tm-btn-secondary" onClick={onEdit}>
+        Edit
+      </button>
+      <button className="tm-btn-secondary" onClick={onDefault}>
+        Default
+      </button>
+      <button className="tm-btn-secondary danger-text" onClick={onDelete}>
+        Delete
+      </button>
+    </div>
+  );
+}

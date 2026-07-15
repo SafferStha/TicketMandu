@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { ordersAPI, getErrorMessage } from "../api";
 import PageHeader from "../components/PageHeader";
+import ConfirmModal from "../components/ConfirmModal";
 import { formatPrice, formatDateTime } from "../utils/format.util";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [confirmOrderId, setConfirmOrderId] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -27,19 +30,18 @@ export default function OrdersPage() {
     Promise.resolve().then(load);
   }, []);
 
-  const cancelOrder = async (id) => {
-    if (
-      !window.confirm(
-        "Cancel this pending order? Reserved ticket quantities will be released.",
-      )
-    )
-      return;
+  const cancelOrder = async () => {
+    if (!confirmOrderId) return;
+    setCancelling(true);
     try {
-      await ordersAPI.cancel(id);
+      await ordersAPI.cancel(confirmOrderId);
       toast.success("Order cancelled");
+      setConfirmOrderId(null);
       load();
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to cancel order"));
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -137,7 +139,7 @@ export default function OrdersPage() {
                     {status === "pending" ? (
                       <button
                         className="tm-btn-danger"
-                        onClick={() => cancelOrder(order.id)}
+                        onClick={() => setConfirmOrderId(order.id)}
                       >
                         Cancel Order
                       </button>
@@ -154,6 +156,16 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+      <ConfirmModal
+        open={!!confirmOrderId}
+        title="Cancel pending order?"
+        message="Reserved ticket quantities will be released and this unpaid order cannot be paid afterwards."
+        confirmLabel="Cancel order"
+        destructive
+        loading={cancelling}
+        onCancel={() => setConfirmOrderId(null)}
+        onConfirm={cancelOrder}
+      />
     </div>
   );
 }

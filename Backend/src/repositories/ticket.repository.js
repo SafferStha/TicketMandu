@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const db = require('../config/db');
+const db = require("../config/db");
 
 const mapEvent = (row) => ({
   id: row.event_id,
@@ -8,7 +8,7 @@ const mapEvent = (row) => ({
   date: row.event_date,
   time: row.event_time,
   venue: row.event_venue,
-  icon: row.event_icon || '🎫',
+  icon: row.event_icon || "🎫",
   category: row.event_category,
   status: row.event_status,
   organizerId: row.organizer_id,
@@ -27,7 +27,7 @@ const mapTicket = (row) => ({
   seatId: row.seat_id,
   seat_id: row.seat_id,
   status: row.status,
-  seat: row.seat || 'General Admission',
+  seat: row.seat || "General Admission",
   ticketNumber: row.ticket_number,
   ticket_number: row.ticket_number,
   qrCodeValue: row.qr_code_value,
@@ -72,42 +72,57 @@ const create = async (client, data) => {
       data.orderId || null,
       data.ticketTypeId || null,
       data.seatId || null,
-      data.status || 'active',
-      data.seat || 'General Admission',
+      data.status || "active",
+      data.seat || "General Admission",
       data.ticketNumber,
       data.qrCodeValue,
-    ]
+    ],
   );
   return rows[0];
 };
 
 const countByOrderId = async (orderId, client = db) => {
-  const { rows } = await client.query('SELECT COUNT(*)::int AS count FROM tickets WHERE order_id = $1 AND deleted_at IS NULL', [orderId]);
+  const { rows } = await client.query(
+    "SELECT COUNT(*)::int AS count FROM tickets WHERE order_id = $1 AND deleted_at IS NULL",
+    [orderId],
+  );
   return Number(rows[0]?.count || 0);
 };
 
-const list = async ({ where = '1=1', params = [], limit = 20, offset = 0, orderBy = 't.created_at DESC' } = {}) => {
+const list = async ({
+  where = "1=1",
+  params = [],
+  limit = 20,
+  offset = 0,
+  orderBy = "t.created_at DESC",
+} = {}) => {
   const finalWhere = `WHERE t.deleted_at IS NULL AND ${where}`;
   const { rows } = await db.query(
     `${baseSelect} ${finalWhere} ORDER BY ${orderBy} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-    [...params, limit, offset]
+    [...params, limit, offset],
   );
   const { rows: countRows } = await db.query(
     `SELECT COUNT(DISTINCT t.id)::int AS count FROM tickets t JOIN events e ON e.id = t.event_id LEFT JOIN orders o ON o.id = t.order_id LEFT JOIN ticket_types tt ON tt.id = t.ticket_type_id ${finalWhere}`,
-    params
+    params,
   );
-  return { tickets: rows.map(mapTicket), total: Number(countRows[0]?.count || 0) };
+  return {
+    tickets: rows.map(mapTicket),
+    total: Number(countRows[0]?.count || 0),
+  };
 };
 
 const findById = async (id) => {
-  const { rows } = await db.query(`${baseSelect} WHERE t.id = $1 AND t.deleted_at IS NULL LIMIT 1`, [id]);
+  const { rows } = await db.query(
+    `${baseSelect} WHERE t.id = $1 AND t.deleted_at IS NULL LIMIT 1`,
+    [id],
+  );
   return rows[0] ? mapTicket(rows[0]) : null;
 };
 
 const findByTicketNumber = async (ticketNumber) => {
   const { rows } = await db.query(
     `${baseSelect} WHERE t.deleted_at IS NULL AND (LOWER(t.ticket_number) = LOWER($1) OR LOWER(t.qr_code_value) = LOWER($1)) LIMIT 1`,
-    [ticketNumber]
+    [ticketNumber],
   );
   return rows[0] ? mapTicket(rows[0]) : null;
 };
@@ -115,7 +130,7 @@ const findByTicketNumber = async (ticketNumber) => {
 const markCheckedIn = async (ticketId) => {
   const { rows } = await db.query(
     `UPDATE tickets SET status = 'used', checked_in_at = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *`,
-    [ticketId]
+    [ticketId],
   );
   return rows[0] ? findById(rows[0].id) : null;
 };
@@ -123,20 +138,21 @@ const markCheckedIn = async (ticketId) => {
 const updateStatus = async (ticketId, status) => {
   const { rows } = await db.query(
     `UPDATE tickets SET status = $2, updated_at = NOW() WHERE id = $1 RETURNING *`,
-    [ticketId, status]
+    [ticketId, status],
   );
   return rows[0] ? findById(rows[0].id) : null;
 };
 
 const getStats = async (actor = {}) => {
   const params = [];
-  let scope = '1=1';
-  if (actor.role === 'user') {
+  let scope = "1=1";
+  if (actor.role === "user") {
     params.push(actor.id);
-    scope = 't.user_id = $1';
-  } else if (actor.role === 'organizer') {
+    scope = "t.user_id = $1";
+  } else if (actor.role === "organizer") {
     params.push(actor.id);
-    scope = 'e.organizer_id = $1';
+    scope =
+      "e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL)";
   }
 
   const { rows } = await db.query(
@@ -149,7 +165,7 @@ const getStats = async (actor = {}) => {
      FROM tickets t
      JOIN events e ON e.id = t.event_id
      WHERE t.deleted_at IS NULL AND ${scope}`,
-    params
+    params,
   );
   return rows[0] || { total: 0, active: 0, used: 0, cancelled: 0, refunded: 0 };
 };

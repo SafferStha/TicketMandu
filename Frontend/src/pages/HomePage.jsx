@@ -157,7 +157,11 @@ export default function HomePage() {
 }
 
 const styles = {
-  page: { minHeight: "100vh", background: "#f4f6fb" },
+  page: {
+    minHeight: "100vh",
+    background: "var(--light-bg)",
+    color: "var(--text-primary)",
+  },
   hero: {
     background: "linear-gradient(135deg, #0d1b4b 0%, #1a3a6b 100%)",
     padding: "32px 0 40px",
@@ -192,7 +196,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    background: "#ffffff",
+    background: "var(--card-bg)",
+    border: "1px solid var(--border-color)",
     borderRadius: "12px",
     padding: "12px 16px",
     boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
@@ -202,7 +207,7 @@ const styles = {
     border: "none",
     outline: "none",
     fontSize: "14.5px",
-    color: "#1a1a2e",
+    color: "var(--text-primary)",
     background: "transparent",
     fontFamily: "inherit",
   },
@@ -224,7 +229,7 @@ const styles = {
   sectionTitle: {
     fontSize: "17px",
     fontWeight: "700",
-    color: "#1a1a2e",
+    color: "var(--text-primary)",
     margin: 0,
   },
   seeAll: {
@@ -250,6 +255,6 @@ const styles = {
     gap: "12px",
     marginTop: "16px",
   },
-  empty: { color: "#9e9e9e", textAlign: "center", padding: "24px" },
-  error: { color: "#e53935", textAlign: "center", padding: "24px" },
+  empty: { color: "var(--text-muted)", textAlign: "center", padding: "24px" },
+  error: { color: "var(--danger)", textAlign: "center", padding: "24px" },
 };

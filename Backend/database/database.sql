@@ -44,10 +44,10 @@ CREATE TABLE tickets (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL DEFAULT 'active',
+    status VARCHAR(20) DEFAULT 'upcoming',
     seat VARCHAR(255) DEFAULT 'General Admission',
     created_at TIMESTAMP DEFAULT NOW(),
-    CHECK (status IN ('active', 'used', 'cancelled', 'refunded'))
+    CHECK (status IN ('upcoming', 'past'))
 );
 
 --------------------------------------------------
@@ -95,9 +95,9 @@ INSERT INTO events (name, date, time, venue, price, category, icon, featured) VA
 -- SEED TICKETS
 --------------------------------------------------
 INSERT INTO tickets (user_id, event_id, status, seat) VALUES
-(1, 1, 'active', 'Section A - Seat 12'),
-(1, 2, 'active', 'Section C - Seat 8'),
-(2, 3, 'active', 'Floor - Seat 15'),
-(3, 4, 'active', 'VIP - Seat 3');
+(1, 1, 'upcoming', 'Section A - Seat 12'),
+(1, 2, 'upcoming', 'Section C - Seat 8'),
+(2, 3, 'upcoming', 'Floor - Seat 15'),
+(3, 4, 'upcoming', 'VIP - Seat 3');
 
 COMMIT;

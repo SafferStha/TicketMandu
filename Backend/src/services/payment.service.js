@@ -15,7 +15,7 @@ const createAppError = (message, statusCode, code) => {
   return err;
 };
 
-const mockPay = async (actor, orderId) => {
+const mockPay = async (actor, orderId, paymentMethod = "mock") => {
   const client = await db.connect();
   try {
     await client.query("BEGIN");
@@ -23,6 +23,30 @@ const mockPay = async (actor, orderId) => {
     if (!order) throw createAppError("Order not found", 404, "ORDER_NOT_FOUND");
     if (actor?.role === "user" && order.userId !== actor.id)
       throw createAppError("Forbidden", 403, "FORBIDDEN");
+    if (
+      order.status === "pending" &&
+      order.expiresAt &&
+      new Date(order.expiresAt).getTime() < Date.now()
+    ) {
+      for (const item of order.items || []) {
+        await orderRepo.releaseTicketTypeSold(
+          client,
+          item.ticketTypeId,
+          item.quantity,
+        );
+        await orderRepo.updateEventTicketsSold(
+          client,
+          item.eventId,
+          -item.quantity,
+        );
+      }
+      await orderRepo.updateOrderStatus(client, order.id, "expired");
+      throw createAppError(
+        "This order has expired. Please create a new booking.",
+        409,
+        "ORDER_EXPIRED",
+      );
+    }
     if (["cancelled", "expired", "refunded"].includes(order.status)) {
       throw createAppError(
         `Cannot pay a ${order.status} order`,
@@ -47,12 +71,16 @@ const mockPay = async (actor, orderId) => {
     const payment = await paymentRepo.createPayment(client, {
       orderId: order.id,
       userId: order.userId,
-      paymentMethod: "mock",
+      paymentMethod,
       status: "paid",
       amount: order.totalAmount,
       currency: order.currency,
-      gatewayReference: `MOCK-${crypto.randomBytes(6).toString("hex").toUpperCase()}`,
-      gatewayPayload: { provider: "mock", paidAt: new Date().toISOString() },
+      gatewayReference: `${String(paymentMethod).toUpperCase()}-${crypto.randomBytes(6).toString("hex").toUpperCase()}`,
+      gatewayPayload: {
+        provider: paymentMethod,
+        paidAt: new Date().toISOString(),
+        demo: true,
+      },
     });
 
     await orderRepo.updateOrderStatus(client, order.id, "confirmed");
@@ -68,7 +96,11 @@ const mockPay = async (actor, orderId) => {
     await client.query("COMMIT");
     return payment;
   } catch (err) {
-    await client.query("ROLLBACK");
+    if (err.code === "ORDER_EXPIRED") {
+      await client.query("COMMIT");
+    } else {
+      await client.query("ROLLBACK");
+    }
     throw err;
   } finally {
     client.release();
@@ -89,7 +121,9 @@ const listPayments = async (actor, query = {}) => {
     params.push(actor.id);
     idx += 1;
   } else if (actor?.role === "organizer") {
-    where.push(`e.organizer_id = $${idx}`);
+    where.push(
+      `e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $${idx} AND deleted_at IS NULL)`,
+    );
     params.push(actor.id);
     idx += 1;
   }
@@ -134,6 +168,10 @@ const updatePaymentStatus = async (actor, id, status) => {
     }
     if (status === "refunded") {
       await orderRepo.updateOrderStatus(client, payment.order_id, "refunded");
+      await client.query(
+        "UPDATE tickets SET status = 'refunded', updated_at = NOW() WHERE order_id = $1",
+        [payment.order_id],
+      );
     }
     await client.query("COMMIT");
     return updated;

@@ -26,7 +26,9 @@ const buildOrderWhere = (actor, query = {}) => {
     params.push(actor.id);
     idx += 1;
   } else if (actor?.role === "organizer") {
-    conditions.push(`e.organizer_id = $${idx}`);
+    conditions.push(
+      `e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $${idx} AND deleted_at IS NULL)`,
+    );
     params.push(actor.id);
     idx += 1;
   }

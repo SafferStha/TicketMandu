@@ -71,7 +71,8 @@ const listTickets = async (actor, query = {}) => {
     where = "t.user_id = $1";
     params = [actor.id];
   } else if (actor?.role === "organizer") {
-    where = "e.organizer_id = $1";
+    where =
+      "e.organizer_id IN (SELECT id FROM organizers WHERE user_id = $1 AND deleted_at IS NULL)";
     params = [actor.id];
   }
   const result = await ticketRepo.list({

@@ -152,6 +152,7 @@ const styles = {
     padding: "12px 14px",
     borderRadius: "10px",
     border: "1.5px solid #e0e6ed",
+    background: "#ffffff",
     fontSize: "14.5px",
     color: "#1a1a2e",
     outline: "none",

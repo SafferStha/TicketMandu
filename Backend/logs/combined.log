@@ -1,0 +1,405 @@
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.262 ms","timestamp":"2026-07-20T00:18:30.839+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.071 ms","timestamp":"2026-07-20T00:18:30.847+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.963 ms","timestamp":"2026-07-20T00:18:30.853+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.638 ms","timestamp":"2026-07-20T00:18:30.859+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.623 ms","timestamp":"2026-07-20T00:18:30.864+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.589 ms","timestamp":"2026-07-20T00:18:30.870+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.299 ms","timestamp":"2026-07-20T00:18:30.876+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.670 ms","timestamp":"2026-07-20T00:18:30.882+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.536 ms","timestamp":"2026-07-20T00:18:30.888+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.379 ms","timestamp":"2026-07-20T00:18:30.893+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.491 ms","timestamp":"2026-07-20T00:18:30.901+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-20T00:18:30.906+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.009 ms","timestamp":"2026-07-20T00:18:30.907+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 12.596 ms","timestamp":"2026-07-20T00:24:45.759+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.009 ms","timestamp":"2026-07-20T00:24:45.767+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.976 ms","timestamp":"2026-07-20T00:24:45.773+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.654 ms","timestamp":"2026-07-20T00:24:45.780+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.672 ms","timestamp":"2026-07-20T00:24:45.786+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.611 ms","timestamp":"2026-07-20T00:24:45.791+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.239 ms","timestamp":"2026-07-20T00:24:45.797+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.643 ms","timestamp":"2026-07-20T00:24:45.803+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.507 ms","timestamp":"2026-07-20T00:24:45.809+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.376 ms","timestamp":"2026-07-20T00:24:45.814+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.398 ms","timestamp":"2026-07-20T00:24:45.820+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-20T00:24:45.825+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.365 ms","timestamp":"2026-07-20T00:24:45.826+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 23.882 ms","timestamp":"2026-07-21T13:59:14.662+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 0.996 ms","timestamp":"2026-07-21T13:59:14.670+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.065 ms","timestamp":"2026-07-21T13:59:14.677+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.671 ms","timestamp":"2026-07-21T13:59:14.683+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.644 ms","timestamp":"2026-07-21T13:59:14.689+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 1.172 ms","timestamp":"2026-07-21T13:59:14.696+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.407 ms","timestamp":"2026-07-21T13:59:14.703+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.658 ms","timestamp":"2026-07-21T13:59:14.709+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.546 ms","timestamp":"2026-07-21T13:59:14.714+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.417 ms","timestamp":"2026-07-21T13:59:14.719+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.901 ms","timestamp":"2026-07-21T13:59:14.726+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T13:59:14.731+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.941 ms","timestamp":"2026-07-21T13:59:14.732+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.630 ms","timestamp":"2026-07-21T14:02:00.373+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.001 ms","timestamp":"2026-07-21T14:02:00.380+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.952 ms","timestamp":"2026-07-21T14:02:00.386+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.655 ms","timestamp":"2026-07-21T14:02:00.392+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.592 ms","timestamp":"2026-07-21T14:02:00.397+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.658 ms","timestamp":"2026-07-21T14:02:00.402+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.229 ms","timestamp":"2026-07-21T14:02:00.407+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.532 ms","timestamp":"2026-07-21T14:02:00.412+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.480 ms","timestamp":"2026-07-21T14:02:00.417+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.413 ms","timestamp":"2026-07-21T14:02:00.421+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.287 ms","timestamp":"2026-07-21T14:02:00.428+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:02:00.432+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.029 ms","timestamp":"2026-07-21T14:02:00.433+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:16:29.970+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 6.189 ms","timestamp":"2026-07-21T14:16:29.976+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 18.402 ms","timestamp":"2026-07-21T14:17:12.576+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.012 ms","timestamp":"2026-07-21T14:17:12.583+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.918 ms","timestamp":"2026-07-21T14:17:12.590+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.621 ms","timestamp":"2026-07-21T14:17:12.595+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.649 ms","timestamp":"2026-07-21T14:17:12.601+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.516 ms","timestamp":"2026-07-21T14:17:12.605+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.202 ms","timestamp":"2026-07-21T14:17:12.611+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.548 ms","timestamp":"2026-07-21T14:17:12.617+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.617 ms","timestamp":"2026-07-21T14:17:12.622+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.389 ms","timestamp":"2026-07-21T14:17:12.628+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.447 ms","timestamp":"2026-07-21T14:17:12.634+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:17:12.639+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.950 ms","timestamp":"2026-07-21T14:17:12.639+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 21.851 ms","timestamp":"2026-07-21T14:21:01.590+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.139 ms","timestamp":"2026-07-21T14:21:01.598+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.097 ms","timestamp":"2026-07-21T14:21:01.605+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.704 ms","timestamp":"2026-07-21T14:21:01.611+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.714 ms","timestamp":"2026-07-21T14:21:01.617+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 1.074 ms","timestamp":"2026-07-21T14:21:01.624+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.222 ms","timestamp":"2026-07-21T14:21:01.629+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.582 ms","timestamp":"2026-07-21T14:21:01.635+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.631 ms","timestamp":"2026-07-21T14:21:01.640+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.393 ms","timestamp":"2026-07-21T14:21:01.645+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.978 ms","timestamp":"2026-07-21T14:21:01.652+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:21:01.656+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.000 ms","timestamp":"2026-07-21T14:21:01.657+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.936 ms","timestamp":"2026-07-21T14:21:37.592+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.056 ms","timestamp":"2026-07-21T14:21:37.600+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.037 ms","timestamp":"2026-07-21T14:21:37.606+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.659 ms","timestamp":"2026-07-21T14:21:37.612+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.780 ms","timestamp":"2026-07-21T14:21:37.619+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.844 ms","timestamp":"2026-07-21T14:21:37.626+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.338 ms","timestamp":"2026-07-21T14:21:37.633+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.609 ms","timestamp":"2026-07-21T14:21:37.639+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.632 ms","timestamp":"2026-07-21T14:21:37.644+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.424 ms","timestamp":"2026-07-21T14:21:37.650+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.696 ms","timestamp":"2026-07-21T14:21:37.659+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:21:37.664+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.323 ms","timestamp":"2026-07-21T14:21:37.665+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 16.461 ms","timestamp":"2026-07-21T14:21:55.230+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.020 ms","timestamp":"2026-07-21T14:21:55.238+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.061 ms","timestamp":"2026-07-21T14:21:55.244+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.707 ms","timestamp":"2026-07-21T14:21:55.250+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.776 ms","timestamp":"2026-07-21T14:21:55.257+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.562 ms","timestamp":"2026-07-21T14:21:55.262+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.344 ms","timestamp":"2026-07-21T14:21:55.269+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.551 ms","timestamp":"2026-07-21T14:21:55.275+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.532 ms","timestamp":"2026-07-21T14:21:55.281+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.390 ms","timestamp":"2026-07-21T14:21:55.286+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.556 ms","timestamp":"2026-07-21T14:21:55.294+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:21:55.298+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.985 ms","timestamp":"2026-07-21T14:21:55.299+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 19.196 ms","timestamp":"2026-07-21T14:41:25.823+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.018 ms","timestamp":"2026-07-21T14:41:25.831+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.062 ms","timestamp":"2026-07-21T14:41:25.838+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.783 ms","timestamp":"2026-07-21T14:41:25.844+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.688 ms","timestamp":"2026-07-21T14:41:25.851+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.941 ms","timestamp":"2026-07-21T14:41:25.857+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.268 ms","timestamp":"2026-07-21T14:41:25.864+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.589 ms","timestamp":"2026-07-21T14:41:25.870+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.714 ms","timestamp":"2026-07-21T14:41:25.876+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.667 ms","timestamp":"2026-07-21T14:41:25.882+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.803 ms","timestamp":"2026-07-21T14:41:25.890+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:41:25.895+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.342 ms","timestamp":"2026-07-21T14:41:25.896+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.081 ms","timestamp":"2026-07-21T14:41:31.672+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.160 ms","timestamp":"2026-07-21T14:41:31.680+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.992 ms","timestamp":"2026-07-21T14:41:31.686+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.631 ms","timestamp":"2026-07-21T14:41:31.693+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.735 ms","timestamp":"2026-07-21T14:41:31.699+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.569 ms","timestamp":"2026-07-21T14:41:31.704+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.245 ms","timestamp":"2026-07-21T14:41:31.710+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.602 ms","timestamp":"2026-07-21T14:41:31.716+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.599 ms","timestamp":"2026-07-21T14:41:31.721+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.401 ms","timestamp":"2026-07-21T14:41:31.726+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.398 ms","timestamp":"2026-07-21T14:41:31.732+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:41:31.738+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.129 ms","timestamp":"2026-07-21T14:41:31.739+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.757 ms","timestamp":"2026-07-21T14:41:35.955+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.150 ms","timestamp":"2026-07-21T14:41:35.963+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.995 ms","timestamp":"2026-07-21T14:41:35.969+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.570 ms","timestamp":"2026-07-21T14:41:35.975+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.683 ms","timestamp":"2026-07-21T14:41:35.980+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.627 ms","timestamp":"2026-07-21T14:41:35.987+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.259 ms","timestamp":"2026-07-21T14:41:35.993+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.689 ms","timestamp":"2026-07-21T14:41:35.999+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.548 ms","timestamp":"2026-07-21T14:41:36.004+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.401 ms","timestamp":"2026-07-21T14:41:36.010+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.447 ms","timestamp":"2026-07-21T14:41:36.016+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:41:36.022+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.297 ms","timestamp":"2026-07-21T14:41:36.023+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.637 ms","timestamp":"2026-07-21T14:42:12.767+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.045 ms","timestamp":"2026-07-21T14:42:12.774+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.004 ms","timestamp":"2026-07-21T14:42:12.780+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.582 ms","timestamp":"2026-07-21T14:42:12.786+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.597 ms","timestamp":"2026-07-21T14:42:12.791+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.593 ms","timestamp":"2026-07-21T14:42:12.797+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.211 ms","timestamp":"2026-07-21T14:42:12.803+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.566 ms","timestamp":"2026-07-21T14:42:12.808+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.480 ms","timestamp":"2026-07-21T14:42:12.813+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.339 ms","timestamp":"2026-07-21T14:42:12.817+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.638 ms","timestamp":"2026-07-21T14:42:12.823+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:42:12.828+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.932 ms","timestamp":"2026-07-21T14:42:12.829+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.908 ms","timestamp":"2026-07-21T14:42:17.253+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.049 ms","timestamp":"2026-07-21T14:42:17.261+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.935 ms","timestamp":"2026-07-21T14:42:17.267+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.606 ms","timestamp":"2026-07-21T14:42:17.272+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.618 ms","timestamp":"2026-07-21T14:42:17.278+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.485 ms","timestamp":"2026-07-21T14:42:17.283+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.239 ms","timestamp":"2026-07-21T14:42:17.289+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.550 ms","timestamp":"2026-07-21T14:42:17.294+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.412 ms","timestamp":"2026-07-21T14:42:17.298+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.338 ms","timestamp":"2026-07-21T14:42:17.302+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.355 ms","timestamp":"2026-07-21T14:42:17.308+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:42:17.312+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.873 ms","timestamp":"2026-07-21T14:42:17.313+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.637 ms","timestamp":"2026-07-21T14:42:21.364+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.136 ms","timestamp":"2026-07-21T14:42:21.372+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.897 ms","timestamp":"2026-07-21T14:42:21.378+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.580 ms","timestamp":"2026-07-21T14:42:21.383+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.626 ms","timestamp":"2026-07-21T14:42:21.389+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.490 ms","timestamp":"2026-07-21T14:42:21.394+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.297 ms","timestamp":"2026-07-21T14:42:21.398+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.574 ms","timestamp":"2026-07-21T14:42:21.403+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.474 ms","timestamp":"2026-07-21T14:42:21.408+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.293 ms","timestamp":"2026-07-21T14:42:21.412+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.294 ms","timestamp":"2026-07-21T14:42:21.417+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:42:21.422+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.900 ms","timestamp":"2026-07-21T14:42:21.422+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 16.854 ms","timestamp":"2026-07-21T14:42:57.780+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.127 ms","timestamp":"2026-07-21T14:42:57.788+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.034 ms","timestamp":"2026-07-21T14:42:57.794+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.701 ms","timestamp":"2026-07-21T14:42:57.800+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.557 ms","timestamp":"2026-07-21T14:42:57.805+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.571 ms","timestamp":"2026-07-21T14:42:57.810+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.307 ms","timestamp":"2026-07-21T14:42:57.815+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.543 ms","timestamp":"2026-07-21T14:42:57.820+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.545 ms","timestamp":"2026-07-21T14:42:57.825+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.340 ms","timestamp":"2026-07-21T14:42:57.830+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.339 ms","timestamp":"2026-07-21T14:42:57.836+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:42:57.841+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.908 ms","timestamp":"2026-07-21T14:42:57.841+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 14.494 ms","timestamp":"2026-07-21T14:43:01.852+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.025 ms","timestamp":"2026-07-21T14:43:01.860+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.004 ms","timestamp":"2026-07-21T14:43:01.866+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.589 ms","timestamp":"2026-07-21T14:43:01.873+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.783 ms","timestamp":"2026-07-21T14:43:01.878+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.556 ms","timestamp":"2026-07-21T14:43:01.883+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.183 ms","timestamp":"2026-07-21T14:43:01.889+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.544 ms","timestamp":"2026-07-21T14:43:01.894+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.561 ms","timestamp":"2026-07-21T14:43:01.899+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.319 ms","timestamp":"2026-07-21T14:43:01.904+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.331 ms","timestamp":"2026-07-21T14:43:01.909+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:43:01.914+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.962 ms","timestamp":"2026-07-21T14:43:01.915+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.288 ms","timestamp":"2026-07-21T14:43:54.328+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.392 ms","timestamp":"2026-07-21T14:43:54.338+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.244 ms","timestamp":"2026-07-21T14:43:54.345+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.844 ms","timestamp":"2026-07-21T14:43:54.352+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.675 ms","timestamp":"2026-07-21T14:43:54.357+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.577 ms","timestamp":"2026-07-21T14:43:54.363+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.289 ms","timestamp":"2026-07-21T14:43:54.370+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.576 ms","timestamp":"2026-07-21T14:43:54.375+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.543 ms","timestamp":"2026-07-21T14:43:54.381+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.389 ms","timestamp":"2026-07-21T14:43:54.386+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.394 ms","timestamp":"2026-07-21T14:43:54.392+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:43:54.397+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.999 ms","timestamp":"2026-07-21T14:43:54.397+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 15.069 ms","timestamp":"2026-07-21T14:44:01.833+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.065 ms","timestamp":"2026-07-21T14:44:01.841+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.053 ms","timestamp":"2026-07-21T14:44:01.848+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.656 ms","timestamp":"2026-07-21T14:44:01.854+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.901 ms","timestamp":"2026-07-21T14:44:01.860+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.598 ms","timestamp":"2026-07-21T14:44:01.866+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.412 ms","timestamp":"2026-07-21T14:44:01.872+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.624 ms","timestamp":"2026-07-21T14:44:01.878+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.524 ms","timestamp":"2026-07-21T14:44:01.884+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.396 ms","timestamp":"2026-07-21T14:44:01.889+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.466 ms","timestamp":"2026-07-21T14:44:01.897+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T14:44:01.901+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.945 ms","timestamp":"2026-07-21T14:44:01.902+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 23.137 ms","timestamp":"2026-07-21T16:22:29.534+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.046 ms","timestamp":"2026-07-21T16:22:29.543+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 1.025 ms","timestamp":"2026-07-21T16:22:29.549+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.630 ms","timestamp":"2026-07-21T16:22:29.556+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 1.058 ms","timestamp":"2026-07-21T16:22:29.568+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.587 ms","timestamp":"2026-07-21T16:22:29.576+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.286 ms","timestamp":"2026-07-21T16:22:29.584+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.884 ms","timestamp":"2026-07-21T16:22:29.594+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.619 ms","timestamp":"2026-07-21T16:22:29.599+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.454 ms","timestamp":"2026-07-21T16:22:29.607+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.827 ms","timestamp":"2026-07-21T16:22:29.615+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T16:22:29.620+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 1.474 ms","timestamp":"2026-07-21T16:22:29.622+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:22:47.673+05:45"}
+{"level":"info","message":"[db] Connected to PostgreSQL — database: \"ticketmandu\", time: Tue Jul 21 2026 16:22:47 GMT+0545 (Nepal Time)","timestamp":"2026-07-21T16:22:47.704+05:45"}
+{"level":"info","message":"[db] Applying schema...","timestamp":"2026-07-21T16:22:47.705+05:45"}
+{"level":"info","message":"[db] Schema applied successfully","timestamp":"2026-07-21T16:22:47.773+05:45"}
+{"level":"info","message":"[db] Applying seed data...","timestamp":"2026-07-21T16:22:47.773+05:45"}
+{"level":"info","message":"[db] Seeded demo users","timestamp":"2026-07-21T16:22:47.869+05:45"}
+{"level":"info","message":"[db] Seeded venues","timestamp":"2026-07-21T16:22:47.874+05:45"}
+{"level":"info","message":"[db] Seeded organizers","timestamp":"2026-07-21T16:22:47.888+05:45"}
+{"level":"info","message":"[db] Seeded ticket types","timestamp":"2026-07-21T16:22:47.908+05:45"}
+{"level":"info","message":"[db] Seed data applied successfully","timestamp":"2026-07-21T16:22:47.908+05:45"}
+{"level":"info","message":"[db] Database bootstrap complete","timestamp":"2026-07-21T16:22:47.908+05:45"}
+{"level":"info","message":"[server] TicketMandu API running on http://localhost:8000","timestamp":"2026-07-21T16:22:47.910+05:45"}
+{"level":"info","message":"[server] Environment: development","timestamp":"2026-07-21T16:22:47.910+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:22:55.264+05:45"}
+{"level":"info","message":"[db] Connected to PostgreSQL — database: \"ticketmandu\", time: Tue Jul 21 2026 16:22:55 GMT+0545 (Nepal Time)","timestamp":"2026-07-21T16:22:55.268+05:45"}
+{"level":"info","message":"[db] Applying schema...","timestamp":"2026-07-21T16:22:55.269+05:45"}
+{"level":"info","message":"[db] Schema applied successfully","timestamp":"2026-07-21T16:22:55.293+05:45"}
+{"level":"info","message":"[db] Applying seed data...","timestamp":"2026-07-21T16:22:55.294+05:45"}
+{"level":"info","message":"[db] Seeded demo users","timestamp":"2026-07-21T16:22:55.351+05:45"}
+{"level":"info","message":"[db] Seeded venues","timestamp":"2026-07-21T16:22:55.352+05:45"}
+{"level":"info","message":"[db] Seeded organizers","timestamp":"2026-07-21T16:22:55.355+05:45"}
+{"level":"info","message":"[db] Seeded ticket types","timestamp":"2026-07-21T16:22:55.359+05:45"}
+{"level":"info","message":"[db] Seed data applied successfully","timestamp":"2026-07-21T16:22:55.360+05:45"}
+{"level":"info","message":"[db] Database bootstrap complete","timestamp":"2026-07-21T16:22:55.360+05:45"}
+{"level":"info","message":"[server] TicketMandu API running on http://localhost:8000","timestamp":"2026-07-21T16:22:55.361+05:45"}
+{"level":"info","message":"[server] Environment: development","timestamp":"2026-07-21T16:22:55.362+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:23:00.502+05:45"}
+{"level":"info","message":"[db] Connected to PostgreSQL — database: \"ticketmandu\", time: Tue Jul 21 2026 16:23:00 GMT+0545 (Nepal Time)","timestamp":"2026-07-21T16:23:00.506+05:45"}
+{"level":"info","message":"[db] Applying schema...","timestamp":"2026-07-21T16:23:00.507+05:45"}
+{"level":"info","message":"[db] Schema applied successfully","timestamp":"2026-07-21T16:23:00.530+05:45"}
+{"level":"info","message":"[db] Applying seed data...","timestamp":"2026-07-21T16:23:00.530+05:45"}
+{"level":"info","message":"[db] Seeded demo users","timestamp":"2026-07-21T16:23:00.590+05:45"}
+{"level":"info","message":"[db] Seeded venues","timestamp":"2026-07-21T16:23:00.591+05:45"}
+{"level":"info","message":"[db] Seeded organizers","timestamp":"2026-07-21T16:23:00.594+05:45"}
+{"level":"info","message":"[db] Seeded ticket types","timestamp":"2026-07-21T16:23:00.603+05:45"}
+{"level":"info","message":"[db] Seed data applied successfully","timestamp":"2026-07-21T16:23:00.604+05:45"}
+{"level":"info","message":"[db] Database bootstrap complete","timestamp":"2026-07-21T16:23:00.605+05:45"}
+{"level":"info","message":"[server] TicketMandu API running on http://localhost:8000","timestamp":"2026-07-21T16:23:00.607+05:45"}
+{"level":"info","message":"[server] Environment: development","timestamp":"2026-07-21T16:23:00.608+05:45"}
+{"level":"http","message":"GET /api/users/me/preferences 401 75 - 3.038 ms","timestamp":"2026-07-21T16:23:33.246+05:45"}
+{"level":"http","message":"GET /api/users/me/preferences 401 75 - 0.457 ms","timestamp":"2026-07-21T16:23:33.253+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:23:38.792+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 706 - 153.104 ms","timestamp":"2026-07-21T16:23:38.891+05:45"}
+{"level":"http","message":"GET /api/events/featured 200 1765 - 10.326 ms","timestamp":"2026-07-21T16:23:38.972+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 2.300 ms","timestamp":"2026-07-21T16:23:38.979+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:23:39.001+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 200 2989 - 46.184 ms","timestamp":"2026-07-21T16:23:39.009+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 3.396 ms","timestamp":"2026-07-21T16:23:39.017+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:23:42.597+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:23:42.599+05:45"}
+{"level":"http","message":"GET /api/orders/my?limit=50 200 2172 - 50.495 ms","timestamp":"2026-07-21T16:23:42.604+05:45"}
+{"level":"http","message":"GET /api/orders/my?limit=50 304 - - 7.819 ms","timestamp":"2026-07-21T16:23:42.616+05:45"}
+{"level":"http","message":"GET /api/tickets/my?limit=100 200 4389 - 11.696 ms","timestamp":"2026-07-21T16:23:49.792+05:45"}
+{"level":"http","message":"GET /api/tickets/my?limit=100 304 - - 3.317 ms","timestamp":"2026-07-21T16:23:49.799+05:45"}
+{"level":"http","message":"GET /api/tickets/13 200 798 - 1.745 ms","timestamp":"2026-07-21T16:23:51.268+05:45"}
+{"level":"http","message":"GET /api/tickets/13 304 - - 1.806 ms","timestamp":"2026-07-21T16:23:51.273+05:45"}
+{"level":"http","message":"GET /api/events/search?category=music&limit=50 200 1281 - 4.239 ms","timestamp":"2026-07-21T16:23:53.725+05:45"}
+{"level":"http","message":"GET /api/events/1 200 626 - 1.688 ms","timestamp":"2026-07-21T16:23:55.784+05:45"}
+{"level":"http","message":"GET /api/events/1/ticket-types 200 586 - 4.009 ms","timestamp":"2026-07-21T16:23:55.789+05:45"}
+{"level":"http","message":"GET /api/events/1 304 - - 2.795 ms","timestamp":"2026-07-21T16:23:55.791+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=1&limit=50 200 655 - 7.250 ms","timestamp":"2026-07-21T16:23:55.793+05:45"}
+{"level":"http","message":"GET /api/events/1/ticket-types 304 - - 1.965 ms","timestamp":"2026-07-21T16:23:55.796+05:45"}
+{"level":"http","message":"GET /api/events/1/reviews 200 110 - 12.266 ms","timestamp":"2026-07-21T16:23:55.799+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=1&limit=50 304 - - 4.148 ms","timestamp":"2026-07-21T16:23:55.802+05:45"}
+{"level":"http","message":"GET /api/events/1/reviews 304 - - 3.364 ms","timestamp":"2026-07-21T16:23:55.806+05:45"}
+{"level":"http","message":"POST /api/orders 201 569 - 16.837 ms","timestamp":"2026-07-21T16:24:03.468+05:45"}
+{"level":"http","message":"GET /api/orders/6 200 550 - 2.080 ms","timestamp":"2026-07-21T16:24:14.804+05:45"}
+{"level":"http","message":"GET /api/orders/6 304 - - 1.932 ms","timestamp":"2026-07-21T16:24:14.809+05:45"}
+{"level":"debug","message":"[db] New client connected to the pool","timestamp":"2026-07-21T16:24:19.207+05:45"}
+{"level":"http","message":"GET /api/orders/my?limit=50 200 2669 - 36.059 ms","timestamp":"2026-07-21T16:24:19.212+05:45"}
+{"level":"http","message":"GET /api/orders/my?limit=50 304 - - 6.413 ms","timestamp":"2026-07-21T16:24:19.223+05:45"}
+{"level":"http","message":"GET /api/orders/3 200 566 - 1.866 ms","timestamp":"2026-07-21T16:24:26.283+05:45"}
+{"level":"http","message":"GET /api/orders/3 304 - - 1.853 ms","timestamp":"2026-07-21T16:24:26.288+05:45"}
+{"level":"http","message":"GET /api/tickets/my?limit=100 304 - - 4.506 ms","timestamp":"2026-07-21T16:24:28.141+05:45"}
+{"level":"http","message":"GET /api/tickets/my?limit=100 304 - - 2.450 ms","timestamp":"2026-07-21T16:24:28.147+05:45"}
+{"level":"http","message":"GET /api/favorites/my 200 1240 - 4.787 ms","timestamp":"2026-07-21T16:24:29.126+05:45"}
+{"level":"http","message":"GET /api/favorites/my 304 - - 1.338 ms","timestamp":"2026-07-21T16:24:29.130+05:45"}
+{"level":"http","message":"GET /api/notifications/my?limit=50 200 2348 - 2.855 ms","timestamp":"2026-07-21T16:24:31.166+05:45"}
+{"level":"http","message":"GET /api/notifications/my?limit=50 304 - - 1.587 ms","timestamp":"2026-07-21T16:24:31.171+05:45"}
+{"level":"http","message":"GET /api/users/me/preferences 200 358 - 4.600 ms","timestamp":"2026-07-21T16:24:34.156+05:45"}
+{"level":"http","message":"GET /api/users/me/locations 200 303 - 4.986 ms","timestamp":"2026-07-21T16:24:34.157+05:45"}
+{"level":"http","message":"GET /api/users/me/payment-methods 200 292 - 5.220 ms","timestamp":"2026-07-21T16:24:34.158+05:45"}
+{"level":"http","message":"GET /api/users/me/stats 200 256 - 11.167 ms","timestamp":"2026-07-21T16:24:34.158+05:45"}
+{"level":"http","message":"GET /api/users/me/locations 304 - - 2.765 ms","timestamp":"2026-07-21T16:24:34.166+05:45"}
+{"level":"http","message":"GET /api/users/me/preferences 304 - - 4.423 ms","timestamp":"2026-07-21T16:24:34.167+05:45"}
+{"level":"http","message":"GET /api/users/me/payment-methods 304 - - 4.409 ms","timestamp":"2026-07-21T16:24:34.169+05:45"}
+{"level":"http","message":"GET /api/users/me/stats 304 - - 7.641 ms","timestamp":"2026-07-21T16:24:34.173+05:45"}
+{"level":"http","message":"GET /api/events/featured 200 1765 - 1.423 ms","timestamp":"2026-07-21T16:24:42.630+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 200 2989 - 4.506 ms","timestamp":"2026-07-21T16:24:42.634+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.304 ms","timestamp":"2026-07-21T16:24:42.635+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 1.800 ms","timestamp":"2026-07-21T16:24:42.639+05:45"}
+{"level":"http","message":"PATCH /api/users/me/preferences 200 385 - 3.437 ms","timestamp":"2026-07-21T16:24:47.099+05:45"}
+{"level":"http","message":"PATCH /api/users/me/preferences 200 384 - 2.577 ms","timestamp":"2026-07-21T16:24:47.945+05:45"}
+{"level":"http","message":"PATCH /api/users/me/preferences 200 383 - 2.489 ms","timestamp":"2026-07-21T16:24:48.715+05:45"}
+{"level":"http","message":"GET /api/users/me/stats 304 - - 3.737 ms","timestamp":"2026-07-21T16:24:50.377+05:45"}
+{"level":"http","message":"GET /api/users/me/payment-methods 304 - - 1.861 ms","timestamp":"2026-07-21T16:24:50.378+05:45"}
+{"level":"http","message":"GET /api/users/me/locations 304 - - 3.218 ms","timestamp":"2026-07-21T16:24:50.379+05:45"}
+{"level":"http","message":"GET /api/users/me/preferences 200 358 - 4.748 ms","timestamp":"2026-07-21T16:24:50.380+05:45"}
+{"level":"http","message":"GET /api/users/me/locations 304 - - 1.211 ms","timestamp":"2026-07-21T16:24:50.388+05:45"}
+{"level":"http","message":"GET /api/users/me/payment-methods 304 - - 2.601 ms","timestamp":"2026-07-21T16:24:50.388+05:45"}
+{"level":"http","message":"GET /api/users/me/preferences 304 - - 3.085 ms","timestamp":"2026-07-21T16:24:50.390+05:45"}
+{"level":"http","message":"GET /api/users/me/stats 304 - - 10.875 ms","timestamp":"2026-07-21T16:24:50.395+05:45"}
+{"level":"http","message":"PATCH /api/users/me/preferences 200 385 - 3.672 ms","timestamp":"2026-07-21T16:24:56.052+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.393 ms","timestamp":"2026-07-21T16:24:58.222+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 2.905 ms","timestamp":"2026-07-21T16:24:58.224+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.292 ms","timestamp":"2026-07-21T16:24:58.228+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 2.443 ms","timestamp":"2026-07-21T16:24:58.231+05:45"}
+{"level":"http","message":"GET /api/events/1 200 626 - 1.828 ms","timestamp":"2026-07-21T16:25:01.297+05:45"}
+{"level":"http","message":"GET /api/events/1/ticket-types 200 586 - 2.873 ms","timestamp":"2026-07-21T16:25:01.298+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=1&limit=50 200 1152 - 4.642 ms","timestamp":"2026-07-21T16:25:01.300+05:45"}
+{"level":"http","message":"GET /api/events/1/reviews 304 - - 6.019 ms","timestamp":"2026-07-21T16:25:01.302+05:45"}
+{"level":"http","message":"GET /api/events/1 304 - - 1.853 ms","timestamp":"2026-07-21T16:25:01.304+05:45"}
+{"level":"http","message":"GET /api/events/1/reviews 304 - - 0.895 ms","timestamp":"2026-07-21T16:25:01.311+05:45"}
+{"level":"http","message":"GET /api/events/1/ticket-types 304 - - 3.158 ms","timestamp":"2026-07-21T16:25:01.311+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=1&limit=50 304 - - 4.349 ms","timestamp":"2026-07-21T16:25:01.314+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.244 ms","timestamp":"2026-07-21T16:25:02.536+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 0.810 ms","timestamp":"2026-07-21T16:25:02.541+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 2.728 ms","timestamp":"2026-07-21T16:25:02.542+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 1.852 ms","timestamp":"2026-07-21T16:25:02.548+05:45"}
+{"level":"http","message":"GET /api/events/2 200 618 - 1.339 ms","timestamp":"2026-07-21T16:25:03.220+05:45"}
+{"level":"http","message":"GET /api/events/2/ticket-types 200 586 - 2.605 ms","timestamp":"2026-07-21T16:25:03.224+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=2&limit=50 200 138 - 3.076 ms","timestamp":"2026-07-21T16:25:03.225+05:45"}
+{"level":"http","message":"GET /api/events/2 304 - - 1.046 ms","timestamp":"2026-07-21T16:25:03.227+05:45"}
+{"level":"http","message":"GET /api/events/2/reviews 200 110 - 5.976 ms","timestamp":"2026-07-21T16:25:03.227+05:45"}
+{"level":"http","message":"GET /api/events/2/ticket-types 304 - - 2.952 ms","timestamp":"2026-07-21T16:25:03.232+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=2&limit=50 304 - - 3.945 ms","timestamp":"2026-07-21T16:25:03.234+05:45"}
+{"level":"http","message":"GET /api/events/2/reviews 304 - - 2.514 ms","timestamp":"2026-07-21T16:25:03.235+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 0.988 ms","timestamp":"2026-07-21T16:25:04.350+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 2.283 ms","timestamp":"2026-07-21T16:25:04.352+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.603 ms","timestamp":"2026-07-21T16:25:04.356+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 1.937 ms","timestamp":"2026-07-21T16:25:04.359+05:45"}
+{"level":"http","message":"GET /api/events/3 200 624 - 1.182 ms","timestamp":"2026-07-21T16:25:05.264+05:45"}
+{"level":"http","message":"GET /api/events/3/ticket-types 200 586 - 2.260 ms","timestamp":"2026-07-21T16:25:05.268+05:45"}
+{"level":"http","message":"GET /api/events/3/reviews 200 110 - 2.886 ms","timestamp":"2026-07-21T16:25:05.269+05:45"}
+{"level":"http","message":"GET /api/events/3 304 - - 0.958 ms","timestamp":"2026-07-21T16:25:05.270+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=3&limit=50 200 650 - 5.121 ms","timestamp":"2026-07-21T16:25:05.271+05:45"}
+{"level":"http","message":"GET /api/events/3/ticket-types 304 - - 1.630 ms","timestamp":"2026-07-21T16:25:05.276+05:45"}
+{"level":"http","message":"GET /api/events/3/reviews 304 - - 2.309 ms","timestamp":"2026-07-21T16:25:05.278+05:45"}
+{"level":"http","message":"GET /api/orders/my?eventId=3&limit=50 304 - - 4.050 ms","timestamp":"2026-07-21T16:25:05.285+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.184 ms","timestamp":"2026-07-21T16:25:06.437+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 2.714 ms","timestamp":"2026-07-21T16:25:06.439+05:45"}
+{"level":"http","message":"GET /api/events/featured 304 - - 1.247 ms","timestamp":"2026-07-21T16:25:06.443+05:45"}
+{"level":"http","message":"GET /api/events?limit=50 304 - - 2.320 ms","timestamp":"2026-07-21T16:25:06.446+05:45"}
+{"level":"http","message":"POST /api/auth/register 201 669 - 20.601 ms","timestamp":"2026-07-21T16:28:13.620+05:45"}
+{"level":"http","message":"POST /api/auth/register 409 79 - 1.060 ms","timestamp":"2026-07-21T16:28:13.628+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 164 - 0.997 ms","timestamp":"2026-07-21T16:28:13.634+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 165 - 0.733 ms","timestamp":"2026-07-21T16:28:13.640+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 168 - 0.566 ms","timestamp":"2026-07-21T16:28:13.644+05:45"}
+{"level":"http","message":"POST /api/auth/register 422 244 - 0.553 ms","timestamp":"2026-07-21T16:28:13.650+05:45"}
+{"level":"http","message":"POST /api/auth/login 200 657 - 1.474 ms","timestamp":"2026-07-21T16:28:13.656+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.630 ms","timestamp":"2026-07-21T16:28:13.661+05:45"}
+{"level":"http","message":"POST /api/auth/login 401 84 - 0.561 ms","timestamp":"2026-07-21T16:28:13.667+05:45"}
+{"level":"http","message":"GET /api/users/me 401 75 - 0.342 ms","timestamp":"2026-07-21T16:28:13.671+05:45"}
+{"level":"http","message":"GET /api/users/me 200 278 - 1.432 ms","timestamp":"2026-07-21T16:28:13.678+05:45"}
+{"level":"debug","message":"[auth] Token verification failed jwt malformed","timestamp":"2026-07-21T16:28:13.682+05:45"}
+{"level":"http","message":"GET /api/users/me 401 66 - 0.973 ms","timestamp":"2026-07-21T16:28:13.683+05:45"}

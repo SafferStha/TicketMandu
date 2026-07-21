@@ -4,4 +4,4 @@ node_modules
 /uploads
 .env.local
 .envExample
-/Backend/logs
+/Backend/logs/
